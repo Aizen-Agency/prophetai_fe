@@ -1,0 +1,227 @@
+@keyframes revealFromLeft {
+  0% {
+    transform: translateX(-10px);
+    opacity: 0;
+    filter: blur(4px);
+  }
+  100% {
+    transform: translateX(0);
+    opacity: 1;
+    filter: blur(0);
+  }
+}
+
+.reveal-letter {
+  opacity: 0;
+  filter: blur(4px);
+  animation: revealFromLeft 1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  will-change: transform;
+}
+
+.reveal-delay-1 {
+  animation-delay: 0.4s;
+}
+
+.reveal-delay-2 {
+  animation-delay: 0.8s;
+}
+
+@keyframes text-gradient {
+    0% {
+        background-image: linear-gradient(
+            45deg,
+            #818cf8 0%,
+            #c084fc 100%
+        );
+    }
+    33% {
+        background-image: linear-gradient(
+            45deg,
+            #c084fc 0%,
+            #f472b6 100%
+        );
+    }
+    66% {
+        background-image: linear-gradient(
+            45deg,
+            #f472b6 0%,
+            #818cf8 100%
+        );
+    }
+    100% {
+        background-image: linear-gradient(
+            45deg,
+            #818cf8 0%,
+            #c084fc 100%
+        );
+    }
+}
+
+.wavii-gradient {
+    opacity: 0;
+    animation: 
+        revealFromLeft 1s cubic-bezier(0.16, 1, 0.3, 1) forwards,
+        text-gradient 30s cubic-bezier(0.4, 0, 0.2, 1) infinite 1s;
+    background-clip: text;
+    -webkit-background-clip: text;
+    color: transparent;
+    will-change: transform, background-image;
+}
+
+@keyframes gradient-animation {
+    0% {
+        background-position: 0% 50%;
+    }
+    50% {
+        background-position: 100% 50%;
+    }
+    100% {
+        background-position: 0% 50%;
+    }
+}
+
+.fluid-gradient {
+    background: linear-gradient(-45deg, #818cf8, #c084fc, #f472b6, #818cf8);
+    background-size: 400% 400%;
+    animation: gradient-animation 15s ease infinite;
+}
+
+.blob-gradient {
+    position: absolute;
+    width: 700px;
+    height: 700px;
+    background: linear-gradient(180deg, rgba(0,240,255,0.2), rgba(0,100,255,0.2));
+    filter: blur(120px);
+    animation: blob-move 35s infinite cubic-bezier(0.4, 0.0, 0.2, 1);
+    opacity: 0.55;
+}
+
+@keyframes blob-move {
+    0% {
+        transform: translate(0%, 0%) rotate(0deg);
+    }
+    33% {
+        transform: translate(20%, -20%) rotate(90deg);
+    }
+    66% {
+        transform: translate(-15%, 15%) rotate(180deg);
+    }
+    100% {
+        transform: translate(0%, 0%) rotate(270deg);
+    }
+}
+
+
+.pink__gradient {
+    background: linear-gradient(90deg, 
+      rgba(255, 0, 242, 0.6) 0%, 
+      rgba(255, 0, 128, 0.5) 50%,
+      rgba(255, 0, 200, 0.6) 100%
+    );
+    filter: blur(75px);
+    opacity: 0.75;
+    width: 900px;
+    height: 500px;
+    animation: neonPulse 4s infinite;
+  }
+  
+  .white__gradient {
+    background: rgba(255, 255, 255, 0.15);
+    filter: blur(85px);
+    width: 850px;
+    height: 600px;
+    animation: neonPulse 5s infinite;
+  }
+  
+  .blue__gradient {
+    background: linear-gradient(180deg, 
+      rgba(0, 255, 255, 0.5) 0%, 
+      rgba(157, 0, 255, 0.45) 50%,
+      rgba(0, 217, 255, 0.5) 100%
+    );
+    filter: blur(70px);
+    opacity: 0.8;
+    width: 1100px;
+    height: 650px;
+    animation: neonPulse 4.5s infinite;
+  }
+
+@keyframes scrollUp {
+  0% {
+    transform: translateY(0);
+  }
+  100% {
+    transform: translateY(-50%);
+  }
+}
+
+@keyframes scrollDown {
+  0% {
+    transform: translateY(-50%);
+  }
+  100% {
+    transform: translateY(0);
+  }
+}
+
+/* Middle column animations */
+.scroll-column-up {
+  transform: translateY(0);
+  animation: scrollUp 25s linear infinite;
+  will-change: transform;
+}
+
+.scroll-column-up-delayed {
+  transform: translateY(50%);
+  animation: scrollUp 25s linear infinite;
+  will-change: transform;
+}
+
+/* Side columns animations */
+.scroll-column-down {
+  transform: translateY(-50%);
+  animation: scrollDown 25s linear infinite;
+  will-change: transform;
+}
+
+.scroll-column-down-delayed {
+  transform: translateY(0);
+  animation: scrollDown 25s linear infinite;
+  will-change: transform;
+}
+
+.reviews-container {
+  position: relative;
+  height: 800px;
+  overflow: hidden;
+}
+
+/* Gradient masks for fade effect */
+.reviews-container::before,
+.reviews-container::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 150px; /* Adjust height of fade effect */
+  z-index: 2;
+  pointer-events: none;
+}
+
+.reviews-container::before {
+  top: 0;
+  background: linear-gradient(to bottom, 
+    rgb(0, 0, 0) 0%,
+    rgba(0, 0, 0, 0.9) 20%,
+    transparent 100%
+  );
+}
+
+.reviews-container::after {
+  bottom: 0;
+  background: linear-gradient(to top, 
+    rgb(0, 0, 0) 0%,
+    rgba(0, 0, 0, 0.9) 20%,
+    transparent 100%
+  );
+}
