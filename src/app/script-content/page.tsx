@@ -9,9 +9,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
-import { Sidebar
+import { Sidebar } from "@/components/Sidebar"
 
- } from "./components/sidebar"
 const scriptTypes = [
   { value: "copy1", label: "Instagram Reels Copy 1" },
   { value: "copy2", label: "Instagram Reels Copy 2" },

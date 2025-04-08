@@ -8,7 +8,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import { Sidebar } from "./components/sidebar"
+import { Sidebar } from "@/components/Sidebar"
+
 const scriptTypes = [
   { id: "copy1", label: "Instagram Reels Copy 1" },
   { id: "copy2", label: "Instagram Reels Copy 2" },
@@ -202,7 +203,7 @@ export default function DashboardPage() {
       <div className="absolute inset-0 bg-gradient-to-br from-[#080f25]/80 via-[#1a1c2e]/60 to-[#2d1b3d]/40"></div>
 
       {/* Sidebar Component */}
-      <Sidebar />
+      <Sidebar activeItem="scripts"/>
 
       {/* Main Content */}
       <div className="flex-grow p-10 relative z-10 overflow-y-auto">
