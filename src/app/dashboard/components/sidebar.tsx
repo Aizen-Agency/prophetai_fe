@@ -1,16 +1,11 @@
-import type React from "react"
+"use client"
+
 import { LayoutDashboard, FileText, Video, Send } from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 
-type SidebarItem = {
-  icon: React.ElementType
-  label: string
-  isActive?: boolean
-}
-
-const sidebarItems: SidebarItem[] = [
+const sidebarItems = [
   { icon: LayoutDashboard, label: "Dashboard" },
-  { icon: FileText, label: "Scripts", isActive: true },
+  { icon: FileText, label: "Scripts" },
   { icon: Video, label: "Videos" },
   { icon: Send, label: "Posting" },
 ]
@@ -30,16 +25,16 @@ export function Sidebar() {
       </div>
 
       <nav className="space-y-12 text-white flex-grow">
-        {sidebarItems.map((item) => (
+        {sidebarItems.map((item, index) => (
           <div
             key={item.label}
             className={`flex flex-col items-center justify-center p-3 rounded-lg hover:bg-white/5 cursor-pointer relative ${
-              item.isActive ? "bg-white/5" : ""
+              index === 0 ? "bg-white/5" : ""
             }`}
           >
             <item.icon className="h-10 w-10 mb-2" />
             <span className="text-sm text-center">{item.label}</span>
-            {item.isActive && <div className="absolute left-0 top-0 bottom-0 w-1 bg-white rounded-r-full" />}
+            {index === 0 && <div className="absolute left-0 top-0 bottom-0 w-1 bg-white rounded-r-full" />}
           </div>
         ))}
       </nav>

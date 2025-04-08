@@ -1,14 +1,7 @@
-import type React from "react"
 import { LayoutDashboard, FileText, Video, Send } from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 
-type SidebarItem = {
-  icon: React.ElementType
-  label: string
-  isActive?: boolean
-}
-
-const sidebarItems: SidebarItem[] = [
+const sidebarItems = [
   { icon: LayoutDashboard, label: "Dashboard" },
   { icon: FileText, label: "Scripts", isActive: true },
   { icon: Video, label: "Videos" },

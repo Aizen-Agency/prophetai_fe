@@ -1,21 +1,20 @@
-import type React from "react"
-import { LayoutDashboard, FileText, Video, Send } from "lucide-react"
+"use client"
+
+import { LayoutDashboard, FileText, Video, Send } from 'lucide-react'
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 
-type SidebarItem = {
-  icon: React.ElementType
-  label: string
-  isActive?: boolean
+interface SidebarProps {
+  activeItem?: string
 }
 
-const sidebarItems: SidebarItem[] = [
-  { icon: LayoutDashboard, label: "Dashboard" },
-  { icon: FileText, label: "Scripts", isActive: true },
-  { icon: Video, label: "Videos" },
-  { icon: Send, label: "Posting" },
+const sidebarItems = [
+  { icon: LayoutDashboard, label: "Dashboard", id: "dashboard" },
+  { icon: FileText, label: "Scripts", id: "scripts" },
+  { icon: Video, label: "Videos", id: "videos" },
+  { icon: Send, label: "Posting", id: "posting" },
 ]
 
-export function Sidebar() {
+export function Sidebar({ activeItem = "scripts" }: SidebarProps) {
   return (
     <div className="w-[150px] h-screen bg-[#080f25]/60 py-8 px-4 flex flex-col border-r border-white/10 relative z-10">
       <div className="flex flex-col items-center gap-4 mb-16">
@@ -32,14 +31,14 @@ export function Sidebar() {
       <nav className="space-y-12 text-white flex-grow">
         {sidebarItems.map((item) => (
           <div
-            key={item.label}
+            key={item.id}
             className={`flex flex-col items-center justify-center p-3 rounded-lg hover:bg-white/5 cursor-pointer relative ${
-              item.isActive ? "bg-white/5" : ""
+              activeItem === item.id ? "bg-white/5" : ""
             }`}
           >
             <item.icon className="h-10 w-10 mb-2" />
             <span className="text-sm text-center">{item.label}</span>
-            {item.isActive && <div className="absolute left-0 top-0 bottom-0 w-1 bg-white rounded-r-full" />}
+            {activeItem === item.id && <div className="absolute left-0 top-0 bottom-0 w-1 bg-white rounded-r-full" />}
           </div>
         ))}
       </nav>
