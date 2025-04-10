@@ -10,6 +10,8 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
 import { Sidebar } from "@/components/Sidebar"
+import { useRouter } from 'next/navigation'
+
 
 const scriptTypes = [
   { value: "copy1", label: "Instagram Reels Copy 1" },
@@ -136,6 +138,9 @@ export default function ScriptsPage() {
   const [selectedScript, setSelectedScript] = useState("copy1")
   const [script, setScript] = useState(scripts.copy1)
   const [isLocked, setIsLocked] = useState(false)
+
+  const router = useRouter();
+
 
   const copyToClipboard = async () => {
     try {

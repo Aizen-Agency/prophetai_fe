@@ -33,6 +33,7 @@ function LoginForm() {
 
       if (response.ok) {
         login(email);
+        router.push('/dashboard')
       } else {
         setError(data.error || 'An error occurred. Please try again.');
       }

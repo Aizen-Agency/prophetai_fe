@@ -2,19 +2,29 @@
 
 import { LayoutDashboard, FileText, Video, Send } from 'lucide-react'
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { useRouter } from 'next/navigation'
+
 
 interface SidebarProps {
   activeItem?: string
 }
 
 const sidebarItems = [
-  { icon: LayoutDashboard, label: "Dashboard", id: "dashboard" },
-  { icon: FileText, label: "Scripts", id: "scripts" },
-  { icon: Video, label: "Videos", id: "videos" },
-  { icon: Send, label: "Posting", id: "posting" },
+  { icon: LayoutDashboard, label: "Dashboard", id: "dashboard", link : 'dashboard' },
+  { icon: FileText, label: "Scripts", id: "scripts" , link : "script-idea" },
+  { icon: Video, label: "Videos", id: "videos" , link : "your-video" },
+  { icon: Send, label: "Posting", id: "posting" , link : "posting" },
 ]
 
+
 export function Sidebar({ activeItem = "scripts" }: SidebarProps) {
+  const router = useRouter();
+
+  const navigate = (link: string) => {
+    console.log("Navigating to:", link);
+    router.push(`/${link}`);
+  };
+  
   return (
     <div className="w-[150px] h-screen bg-[#080f25]/60 py-8 px-4 flex flex-col border-r border-white/10 relative z-10">
       <div className="flex flex-col items-center gap-4 mb-16">
@@ -32,6 +42,7 @@ export function Sidebar({ activeItem = "scripts" }: SidebarProps) {
         {sidebarItems.map((item) => (
           <div
             key={item.id}
+            onClick={() => navigate(item.link)}
             className={`flex flex-col items-center justify-center p-3 rounded-lg hover:bg-white/5 cursor-pointer relative ${
               activeItem === item.id ? "bg-white/5" : ""
             }`}
@@ -44,7 +55,9 @@ export function Sidebar({ activeItem = "scripts" }: SidebarProps) {
       </nav>
 
       <div className="mt-auto pt-6 border-t border-white/10">
-        <div className="flex flex-col items-center gap-3 p-3 rounded-lg hover:bg-white/5 cursor-pointer">
+        <div className="flex flex-col items-center gap-3 p-3 rounded-lg hover:bg-white/5 cursor-pointer"
+            onClick={() => {navigate('performance-tracker')}}
+            >
           <Avatar className="h-16 w-16">
             <AvatarImage src="/placeholder.svg?height=64&width=64" alt="Jessie" />
             <AvatarFallback>JE</AvatarFallback>

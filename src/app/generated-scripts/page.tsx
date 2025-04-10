@@ -9,6 +9,8 @@ import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Sidebar } from "@/components/Sidebar"
+import { useRouter } from 'next/navigation'
+
 
 const scriptTypes = [
   { id: "copy1", label: "Instagram Reels Copy 1" },
@@ -130,6 +132,8 @@ Revolutionize your content strategy today!
 }
 
 export default function DashboardPage() {
+  const router = useRouter()
+
   const [selectedScripts, setSelectedScripts] = useState<string[]>([])
   const [isGenerating, setIsGenerating] = useState(false)
   const [sortOption, setSortOption] = useState<"newest" | "oldest" | "az" | "za">("newest")
@@ -173,6 +177,7 @@ export default function DashboardPage() {
     //     description: `Successfully generated ${selectedScripts.length} video${selectedScripts.length > 1 ? "s" : ""}.`,
     //   })
     console.log("Video generated")
+    router.push('/your-video')
     }, 2000)
   }
 
