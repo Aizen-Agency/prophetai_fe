@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label"
 import Link from 'next/link'
 import { useLogin } from '@/context/LoginContext';
 import { motion } from "framer-motion"
+import DataService from '../service/DataService';
 
 function LoginForm() {
   const [email, setEmail] = useState('');
@@ -23,12 +24,7 @@ function LoginForm() {
     setError('');
 
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email : email, password : password }),
-      });
-
+      const response = await DataService.login({email : email , password : password});
       const data = await response.json();
 
       if (response.ok) {

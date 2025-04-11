@@ -9,6 +9,8 @@ import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { motion } from "framer-motion"
 import Link from "next/link"
+import DataService from "../service/DataService"
+
 export default function SignupForm() {
   const [formData, setFormData] = useState({
     firstName: "",
@@ -41,16 +43,12 @@ export default function SignupForm() {
     }
   
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/signup`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          firstname: formData.firstName,
-          lastname: formData.lastName,
-          phoneNo: formData.phoneNumber,
-          email: formData.email,
-          password: formData.password,
-        }),
+      const response = await DataService.signup({
+        firstname: formData.firstName,
+        lastname: formData.lastName,
+        phoneNo: formData.phoneNumber,
+        email: formData.email,
+        password: formData.password,
       })
   
       const data = await response.json()
