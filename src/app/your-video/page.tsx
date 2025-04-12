@@ -1,36 +1,41 @@
 "use client"
 
-import { useState } from "react"
-import { Card, CardContent } from "@/components/ui/card"
+import { useState, useEffect } from "react"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Download, Search } from "lucide-react"
+import { ArrowLeft, Play } from "lucide-react"
 import { Sidebar } from "@/components/Sidebar"
+import { useRouter } from 'next/navigation'
+import DataService from "@/app/service/DataService"
 
-const videoData = [
-  { id: 1, title: "Intro to AntiProphet AI", duration: "2:30", date: "2023-06-15", source: "sync.so" },
-  { id: 2, title: "How to Create Scripts", duration: "5:45", date: "2023-07-01", source: "arcads" },
-  { id: 3, title: "Optimizing Your Content", duration: "4:15", date: "2023-07-10", source: "sync.so" },
-  { id: 4, title: "Advanced Video Techniques", duration: "7:20", date: "2023-07-22", source: "arcads" },
-  { id: 5, title: "Mastering AI Prompts", duration: "6:10", date: "2023-08-05", source: "sync.so" },
-  { id: 6, title: "Engagement Strategies", duration: "3:55", date: "2023-08-18", source: "arcads" },
-]
+interface Video {
+  id: number
+  script_id: number
+  video_url: string
+  size: string
+  created_at: string
+}
 
-export default function VideosPage() {
-  const [searchTerm, setSearchTerm] = useState("")
-  const [sortOption, setSortOption] = useState("latest")
+export default function YourVideosPage() {
+  const router = useRouter()
+  const [videos, setVideos] = useState<Video[]>([])
+  const [loading, setLoading] = useState(true)
 
-  const filteredAndSortedVideos = videoData
-    .filter((video) => video.title.toLowerCase().includes(searchTerm.toLowerCase()))
-    .sort((a, b) => {
-      if (sortOption === "latest") {
-        return new Date(b.date).getTime() - new Date(a.date).getTime()
-      } else if (sortOption === "oldest") {
-        return new Date(a.date).getTime() - new Date(b.date).getTime()
+  useEffect(() => {
+    const fetchVideos = async () => {
+      try {
+        const userId = 1 // TODO: Replace with actual user ID
+        const response = await DataService.getVideosByUserId(userId)
+        setVideos(response)
+      } catch (error) {
+        console.error('Error fetching videos:', error)
+      } finally {
+        setLoading(false)
       }
-      return 0
-    })
+    }
+
+    fetchVideos()
+  }, [])
 
   return (
     <div className="min-h-screen text-white flex relative overflow-hidden">
@@ -41,71 +46,68 @@ export default function VideosPage() {
       </div>
       <div className="absolute inset-0 bg-gradient-to-br from-[#080f25]/80 via-[#1a1c2e]/60 to-[#2d1b3d]/40"></div>
 
-      {/* Sidebar */}
-      <Sidebar />
+      {/* Sidebar Component */}
+      <Sidebar activeItem="videos"/>
 
       {/* Main Content */}
-      <div className="flex-grow p-10 relative z-10">
+      <div className="flex-grow p-10 relative z-10 overflow-y-auto">
+        <Button
+          variant="ghost"
+          size="icon"
+          className="mb-4"
+          onClick={() => router.back()}
+        >
+          <ArrowLeft className="h-6 w-6" />
+          <span className="sr-only">Go back</span>
+        </Button>
+
         <div className="mb-10">
-          <h1 className="text-3xl font-semibold text-white">Your Videos</h1>
-          <p className="text-white/70 text-lg mt-2">Manage and download your AI-generated videos</p>
+          <h1 className="text-3xl font-semibold text-white">Your Generated Videos</h1>
+          <p className="text-white/70 text-lg mt-2">Watch and manage your AI-generated videos</p>
         </div>
 
-        {/* Search and Sort */}
-        <div className="flex flex-col md:flex-row gap-4 mb-6">
-          <div className="relative flex-grow">
-            <Input
-              type="text"
-              placeholder="Search videos..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10 bg-[#151F38] border-gray-700 text-white"
-            />
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+        {loading ? (
+          <div className="flex justify-center items-center h-64">
+            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-purple-500"></div>
           </div>
-          <Select value={sortOption} onValueChange={setSortOption}>
-            <SelectTrigger className="w-[180px] bg-[#151F38] border-gray-700 text-white relative z-20">
-              <SelectValue placeholder="Sort by" />
-            </SelectTrigger>
-            <SelectContent className="bg-[#151F38] border-gray-700 text-white z-30">
-              <SelectItem value="latest">Latest</SelectItem>
-              <SelectItem value="oldest">Oldest</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-
-        {/* Video Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredAndSortedVideos.map((video) => (
-            <Card key={video.id} className="bg-[#151F38] border-0 shadow-lg shadow-black/25 overflow-hidden">
-              <div className="relative aspect-video">
-                <img
-                  src={`/placeholder.svg?height=200&width=400&text=Video+${video.id}`}
-                  alt={video.title}
-                  className="w-full h-full object-cover"
-                />
-                <div className="absolute bottom-2 left-2 bg-black/70 text-white px-2 py-1 text-sm rounded">
-                  {video.duration}
-                </div>
-                <div className="absolute bottom-2 right-2 bg-black/70 text-white px-2 py-1 text-sm rounded">
-                  {video.source}
-                </div>
-                <Button
-                  variant="default"
-                  size="icon"
-                  className="absolute top-2 right-2 rounded-full bg-gray-700/50 hover:bg-gray-600/60 backdrop-blur-sm transition-all duration-300 border border-gray-500/30 w-10 h-10 p-2 group"
-                >
-                  <Download className="w-5 h-5 text-gray-300 group-hover:text-gray-100 group-hover:scale-110 transition-all duration-300" />
-                  <span className="sr-only">Download</span>
-                </Button>
-              </div>
-              <CardContent className="p-4">
-                <h3 className="text-lg font-semibold text-white">{video.title}</h3>
-                <p className="text-sm text-gray-400 mt-1">{new Date(video.date).toLocaleDateString()}</p>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+        ) : videos.length === 0 ? (
+          <div className="text-center py-10">
+            <p className="text-white/70">No videos generated yet. Go back and generate some videos!</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {videos.map((video) => (
+              <Card key={video.id} className="bg-white/10 border-none shadow-lg">
+                <CardHeader>
+                  <CardTitle className="text-white">Video #{video.id}</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="aspect-video bg-black/20 rounded-lg mb-4 relative">
+                    <video
+                      src={video.video_url}
+                      className="w-full h-full object-cover rounded-lg"
+                      controls
+                    />
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <div className="text-sm text-white/70">
+                      <p>Size: {video.size}</p>
+                      <p>Created: {new Date(video.created_at).toLocaleDateString()}</p>
+                    </div>
+                    <Button
+                      variant="outline"
+                      className="bg-purple-600 hover:bg-purple-700 text-white"
+                      onClick={() => window.open(video.video_url, '_blank')}
+                    >
+                      <Play className="mr-2 h-4 w-4" />
+                      Play
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   )

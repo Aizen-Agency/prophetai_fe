@@ -1,7 +1,7 @@
 "use client"
 
-import { useState } from "react"
-import { ArrowLeft, Edit, Lock, Unlock, Copy, Check } from "lucide-react"
+import { useState, useEffect } from "react"
+import { ArrowLeft, Edit, Lock, Unlock, Copy, Check, Trash2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 // import { toast } from "@/components/ui/use-toast"
@@ -10,167 +10,87 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
 import { Sidebar } from "@/components/Sidebar"
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
+import DataService from "@/app/service/DataService"
 
-
-const scriptTypes = [
-  { value: "copy1", label: "Instagram Reels Copy 1" },
-  { value: "copy2", label: "Instagram Reels Copy 2" },
-  { value: "copy3", label: "Instagram Reels Copy 3" },
-  { value: "copy4", label: "Instagram Reels Copy 4" },
-  { value: "copy5", label: "Instagram Reels Copy 5" },
-  { value: "copy6", label: "Instagram Reels Copy 6" },
-]
-
-const scripts = {
-  copy1: {
-    title: "AntiProphet AI: Content Creation Revolution (Instagram Reels Copy 1)",
-    content: `[Upbeat music starts]
-👋 Hey creators! Tired of staring at blank screens?
-🤖 Meet AntiProphet AI, your new content bestie!
-💡 Input topic, get instant content magic!
-📱 Social posts, blogs, scripts - you name it!
-🎨 Learns your style, sounds like you!
-🔍 SEO optimized for more views!
-🚀 Boost productivity, save time!
-😎 User-friendly, no tech wizardry needed!
-🔥 Say bye to writer's block, hello to wow content!
-🌟 Try AntiProphet AI now!
-[Call to action: Swipe up to revolutionize your content game!]
-#ContentCreation #AIAssistant #AntiProphetAI`,
-    date: new Date(),
-  },
-  copy2: {
-    title: "AntiProphet AI: Content Creation Revolution (Instagram Reels Copy 2)",
-    content: `[Energetic beat drops]
-🎭 Content creators, listen up!
-😓 Struggling with writer's block?
-🚀 Introducing AntiProphet AI!
-⚡ Instant content generation
-🧠 Learns your unique style
-📊 SEO optimization built-in
-⏱️ Save hours on content creation
-🌈 Multiple formats, one tool
-💪 Empower your creativity
-🔥 Stand out in the digital noise
-[Visual: "Try AntiProphet AI Free" button appears]
-Don't miss out on the future of content creation!
-#AntiProphetAI #ContentRevolution #CreatorTools`,
-    date: new Date(),
-  },
-  copy3: {
-    title: "AntiProphet AI: Content Creation Revolution (Instagram Reels Copy 3)",
-    content: `[Upbeat electronic music]
-👀 Attention all content creators!
-🤯 Feeling overwhelmed by content demands?
-🦸‍♀️ AntiProphet AI to the rescue!
-🎨 Generate unique, on-brand content
-⚡ Lightning-fast creation process
-📈 Built-in SEO for maximum reach
-🔄 Adapts to your style over time
-💡 Never run out of ideas again
-🚀 Skyrocket your content strategy
-✨ Unlock your creative potential
-[Text overlay: "Join the AI content revolution"]
-Transform your content game with AntiProphet AI!
-#AIContentCreation #DigitalMarketing #AntiProphetAI`,
-    date: new Date(),
-  },
-  copy4: {
-    title: "AntiProphet AI: Content Creation Revolution (Instagram Reels Copy 4)",
-    content: `[Soft, inspiring background music]
-📝 Content creation got you stressed?
-😴 Tired of late nights brainstorming?
-🌟 Meet AntiProphet AI - your creative companion
-🧠 AI-powered content generation
-🎯 Tailored to your brand voice
-📊 SEO-optimized for better reach
-⏰ Save time, boost productivity
-🔍 Never struggle for ideas again
-💪 Empower your content strategy
-🚀 Take your brand to new heights
-[Visual: "Start your free trial" CTA]
-Experience the future of content creation now!
-#ContentCreation #AITechnology #AntiProphetAI`,
-    date: new Date(),
-  },
-  copy5: {
-    title: "AntiProphet AI: Content Creation Revolution (Instagram Reels Copy 5)",
-    content: `[Upbeat, motivational music]
-🎭 Calling all content creators!
-😓 Exhausted from constant content demands?
-💡 Discover AntiProphet AI
-🚀 Revolutionize your content strategy
-⚡ Generate ideas in seconds
-📝 Create blogs, social posts, and more
-🧠 AI learns and adapts to your style
-📈 Built-in SEO for maximum impact
-⏳ Save time, reduce stress
-🌈 Unleash your creative potential
-[Text appears: "Join the AI content revolution"]
-Level up your content game with AntiProphet AI!
-#AIContentCreator #DigitalMarketing #AntiProphetAI`,
-    date: new Date(),
-  },
-  copy6: {
-    title: "AntiProphet AI: Content Creation Revolution (Instagram Reels Copy 6)",
-    content: `[Dynamic, energetic music]
-👋 Hey there, content creators!
-😪 Tired of content creation burnout?
-🦸 AntiProphet AI is here to save the day!
-🧠 AI-powered content generation
-🎨 Maintains your unique brand voice
-📊 SEO-optimized for better visibility
-⚡ Create content in minutes, not hours
-📱 Perfect for social media, blogs, and more
-🚀 Boost your productivity and reach
-💪 Stay ahead of the competition
-[Visual: "Try AntiProphet AI Now" button]
-Revolutionize your content strategy today!
-#ContentCreation #AIAssistant #AntiProphetAI`,
-    date: new Date(),
-  },
+type Script = {
+  id: number
+  title: string
+  content: string
+  date: string
 }
 
 export default function ScriptsPage() {
   const [isCopied, setIsCopied] = useState(false)
   const [isEditing, setIsEditing] = useState(false)
   const [selectedScript, setSelectedScript] = useState("copy1")
-  const [script, setScript] = useState(scripts.copy1)
+  const [scripts, setScripts] = useState<Record<string, Script>>({})
   const [isLocked, setIsLocked] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
+  const [isSaving, setIsSaving] = useState(false)
+  const [isDeleting, setIsDeleting] = useState(false)
 
-  const router = useRouter();
+  const router = useRouter()
+  const searchParams = useSearchParams()
+  const scriptId = searchParams.get('id')
+  const title = searchParams.get('title')
+  const content = searchParams.get('content')
 
+  useEffect(() => {
+    const fetchScripts = async () => {
+      if (!title || !content) return
+
+      try {
+        setIsLoading(true)
+        const response = await DataService.generateMultipleIdeas({
+          product_name: title,
+          description: content,
+          link: "",
+          script_idea: content
+        })
+
+        if (response && response.scripts) {
+          const scriptsMap: Record<string, Script> = {}
+          response.scripts.forEach((script: any) => {
+            scriptsMap[script.id] = {
+              id: script.id,
+              title: script.title,
+              content: script.content,
+              date: script.date
+            }
+          })
+          setScripts(scriptsMap)
+          setSelectedScript("copy1")
+        }
+      } catch (error) {
+        console.error("Error fetching scripts:", error)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    fetchScripts()
+  }, [title, content])
 
   const copyToClipboard = async () => {
     try {
-      await navigator.clipboard.writeText(script.content)
+      await navigator.clipboard.writeText(scripts[selectedScript]?.content || "")
       setIsCopied(true)
-    //   toast({
-    //     title: "Copied to clipboard",
-    //     description: "The script has been copied to your clipboard.",
-    //   })
-    console.log("copied to clipboard")
       setTimeout(() => setIsCopied(false), 2000)
     } catch (err) {
       console.error("Failed to copy text: ", err)
-    //   toast({
-    //     title: "Copy failed",
-    //     description: "Failed to copy the script. Please try again.",
-    //     variant: "destructive",
-    //   })
     }
   }
 
   const handleEdit = () => {
     if (isEditing) {
       // Save changes
-      scripts[selectedScript as keyof typeof scripts] = script
-    //   toast({
-    //     title: "Changes saved",
-    //     description: "Your edits to the script have been saved.",
-    //   })
-     console.log("saved changes")
+      const updatedScripts = { ...scripts }
+      updatedScripts[selectedScript] = {
+        ...updatedScripts[selectedScript],
+        content: updatedScripts[selectedScript].content
+      }
+      setScripts(updatedScripts)
     }
     setIsEditing(!isEditing)
   }
@@ -178,24 +98,57 @@ export default function ScriptsPage() {
   const handleScriptChange = (value: string) => {
     if (!isLocked) {
       setSelectedScript(value)
-      setScript(scripts[value as keyof typeof scripts])
       setIsEditing(false)
-    } else {
-    //   toast({
-    //     title: "Script is locked",
-    //     description: "Unlock the script to change it.",
-    //     variant: "destructive",
-    //   })
-    console.log("Script is locked")
     }
   }
 
-  const toggleLock = () => {
-    setIsLocked(!isLocked)
-    // toast({
-    //   title: isLocked ? "Script unlocked" : "Script locked",
-    //   description: isLocked ? "You can now change the script." : "The script is now locked.",
-    // })
+  const saveScript = async () => {
+    try {
+      setIsSaving(true)
+      await DataService.saveScript({
+        user_id: 1, // Replace with actual user ID
+        title: scripts[selectedScript].title,
+        content: scripts[selectedScript].content,
+        product_name: scripts[selectedScript].title,
+        is_locked: isLocked
+      })
+    } catch (error) {
+      console.error('Error saving script:', error)
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
+  const deleteScript = async () => {
+    try {
+      setIsDeleting(true)
+      await DataService.deleteScriptById({
+        user_id: 1, // Replace with actual user ID
+        script_id: scripts[selectedScript].id.toString()
+      })
+      router.push('/generated-scripts')
+    } catch (error) {
+      console.error('Error deleting script:', error)
+    } finally {
+      setIsDeleting(false)
+    }
+  }
+
+  const toggleLock = async () => {
+    const newLockState = !isLocked
+    setIsLocked(newLockState)
+    
+    if (newLockState) {
+      await saveScript()
+    }
+  }
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen text-white flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-purple-500"></div>
+      </div>
+    )
   }
 
   return (
@@ -216,10 +169,7 @@ export default function ScriptsPage() {
           variant="ghost"
           size="icon"
           className="mb-4"
-          onClick={() => {
-            // Add navigation logic here
-            console.log("Back button clicked")
-          }}
+          onClick={() => router.back()}
         >
           <ArrowLeft className="h-6 w-6" />
           <span className="sr-only">Go back</span>
@@ -231,17 +181,17 @@ export default function ScriptsPage() {
 
         {/* Script Type Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-10">
-          {scriptTypes.map((type) => (
+          {Object.entries(scripts).map(([id, script]) => (
             <Card
-              key={type.value}
-              className={`bg-[#151F38] border-none ${selectedScript === type.value ? "ring-2 ring-purple-500" : ""}`}
+              key={id}
+              className={`bg-[#151F38] border-none ${selectedScript === id ? "ring-2 ring-purple-500" : ""}`}
             >
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium text-white">{type.label}</CardTitle>
+                <CardTitle className="text-sm font-medium text-white">{script.title}</CardTitle>
                 <RadioGroup value={selectedScript} onValueChange={handleScriptChange}>
                   <div className="flex items-center space-x-2">
-                    <RadioGroupItem value={type.value} id={type.value} className="border-white text-white" />
-                    <Label htmlFor={type.value} className="text-white">
+                    <RadioGroupItem value={id} id={id} className="border-white text-white" />
+                    <Label htmlFor={id} className="text-white">
                       Select
                     </Label>
                   </div>
@@ -249,7 +199,7 @@ export default function ScriptsPage() {
               </CardHeader>
               <CardContent>
                 <p className="text-xs text-white/70">
-                  {scripts[type.value as keyof typeof scripts].content.slice(0, 100)}...
+                  {script.content.slice(0, 100)}...
                 </p>
               </CardContent>
             </Card>
@@ -257,23 +207,32 @@ export default function ScriptsPage() {
         </div>
 
         {/* Selected Script Preview */}
-        <Card className="bg-[#151F38] border-none mb-6">
-          <CardHeader>
-            <CardTitle className="text-white">{script.title}</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {isEditing ? (
-              <Textarea
-                value={script.content}
-                onChange={(e) => setScript({ ...script, content: e.target.value })}
-                className="min-h-[300px] text-white bg-[#1F2A47] border-none resize-none"
-              />
-            ) : (
-              <div className="text-white/80 whitespace-pre-wrap font-mono text-sm">{script.content}</div>
-            )}
-            <div className="mt-4 text-white/50 text-sm">Generated on: {script.date.toLocaleDateString()}</div>
-          </CardContent>
-        </Card>
+        {selectedScript && scripts[selectedScript] && (
+          <Card className="bg-[#151F38] border-none mb-6">
+            <CardHeader>
+              <CardTitle className="text-white">{scripts[selectedScript].title}</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {isEditing ? (
+                <Textarea
+                  value={scripts[selectedScript].content}
+                  onChange={(e) => {
+                    const updatedScripts = { ...scripts }
+                    updatedScripts[selectedScript] = {
+                      ...updatedScripts[selectedScript],
+                      content: e.target.value
+                    }
+                    setScripts(updatedScripts)
+                  }}
+                  className="min-h-[300px] text-white bg-[#1F2A47] border-none resize-none"
+                />
+              ) : (
+                <div className="text-white/80 whitespace-pre-wrap font-mono text-sm">{scripts[selectedScript].content}</div>
+              )}
+              <div className="mt-4 text-white/50 text-sm">Generated on: {new Date(scripts[selectedScript].date).toLocaleDateString()}</div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Action Buttons */}
         <div className="flex space-x-4 items-center">
@@ -293,6 +252,23 @@ export default function ScriptsPage() {
           <Button className="bg-blue-600 hover:bg-blue-700 text-white" onClick={copyToClipboard}>
             {isCopied ? <Check className="mr-2 h-4 w-4" /> : <Copy className="mr-2 h-4 w-4" />}
             {isCopied ? "Copied!" : "Copy Script"}
+          </Button>
+          <Button 
+            className="bg-red-600 hover:bg-red-700 text-white" 
+            onClick={deleteScript}
+            disabled={isDeleting}
+          >
+            {isDeleting ? (
+              <>
+                <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
+                Deleting...
+              </>
+            ) : (
+              <>
+                <Trash2 className="mr-2 h-4 w-4" />
+                Delete Script
+              </>
+            )}
           </Button>
           <div className="flex items-center space-x-2 ml-auto">
             <Switch

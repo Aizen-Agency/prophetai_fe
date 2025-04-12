@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Check, ArrowLeft, Plus, ChevronDown } from "lucide-react"
+import { Check, ArrowLeft, Plus, ChevronDown, Mic } from "lucide-react"
 import { Button } from "@/components/ui/button"
 // import { toast } from "@/components/ui/use-toast"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -10,17 +10,19 @@ import { Badge } from "@/components/ui/badge"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Sidebar } from "@/components/Sidebar"
 import { useRouter } from 'next/navigation'
+import DataService from "@/app/service/DataService"
 
 type Script = {
-  id: string
+  id: number
   title: string
   content: string
-  date: string
+  isLiked: boolean
+  hasVoice: boolean
 }
 
 export default function DashboardPage() {
   const router = useRouter()
-  const [selectedScripts, setSelectedScripts] = useState<string[]>([])
+  const [selectedScripts, setSelectedScripts] = useState<number[]>([])
   const [isGenerating, setIsGenerating] = useState(false)
   const [sortOption, setSortOption] = useState<"newest" | "oldest" | "az" | "za">("newest")
   const [scripts, setScripts] = useState<Script[]>([])
@@ -29,11 +31,18 @@ export default function DashboardPage() {
     // Load scripts from localStorage
     const storedScripts = localStorage.getItem('generatedScripts')
     if (storedScripts) {
-      setScripts(JSON.parse(storedScripts))
+      const parsedScripts = JSON.parse(storedScripts)
+      setScripts(parsedScripts.map((script: any) => ({
+        id: script.id,
+        title: script.topic,
+        content: script.tweet,
+        isLiked: script.isLiked,
+        hasVoice: script.hasVoice
+      })))
     }
   }, [])
 
-  const toggleScriptSelection = (scriptId: string) => {
+  const toggleScriptSelection = (scriptId: number) => {
     setSelectedScripts((prev) => {
       if (prev.includes(scriptId)) {
         return prev.filter((id) => id !== scriptId)
@@ -51,37 +60,59 @@ export default function DashboardPage() {
     }
   }
 
-  const handleGenerate = () => {
+  const handleGenerate = async () => {
     if (selectedScripts.length === 0) {
-    //   toast({
-    //     title: "No scripts selected",
-    //     description: "Please select at least one script to generate a video.",
-    //     variant: "destructive",
-    //   })
-    console.log("No scripts selected");
-      return
+      console.log("No scripts selected");
+      return;
     }
 
-    setIsGenerating(true)
+    setIsGenerating(true);
 
-    // Simulate generation process
-    setTimeout(() => {
-      setIsGenerating(false)
-    //   toast({
-    //     title: "Videos generated",
-    //     description: `Successfully generated ${selectedScripts.length} video${selectedScripts.length > 1 ? "s" : ""}.`,
-    //   })
-    console.log("Video generated")
-    router.push('/your-video')
-    }, 2000)
-  }
+    try {
+      // For each selected script, generate a video
+      const videoPromises = selectedScripts.map(scriptId => {
+        const script = scripts.find(s => s.id === scriptId);
+        if (!script) {
+          console.error(`Script with id ${scriptId} not found`);
+          return null;
+        }
+        
+        return DataService.generateVideo({
+          user_id: 1, // TODO: Replace with actual user ID
+          script_id: scriptId
+        }).catch(error => {
+          console.error(`Error generating video for script ${scriptId}:`, error);
+          return null;
+        });
+      });
+
+      // Wait for all videos to be generated
+      const results = await Promise.all(videoPromises.filter(Boolean));
+      
+      // Check if any videos were successfully generated
+      const successfulGenerations = results.filter(result => result !== null);
+      
+      if (successfulGenerations.length > 0) {
+        // Navigate to the videos page
+        router.push('/your-video');
+      } else {
+        console.error('Failed to generate any videos');
+        // TODO: Show error toast/notification to user
+      }
+    } catch (error) {
+      console.error('Error generating videos:', error);
+      // TODO: Show error toast/notification to user
+    } finally {
+      setIsGenerating(false);
+    }
+  };
 
   const sortedScripts = [...scripts].sort((a, b) => {
     switch (sortOption) {
       case "newest":
-        return new Date(b.date).getTime() - new Date(a.date).getTime()
+        return b.id - a.id
       case "oldest":
-        return new Date(a.date).getTime() - new Date(b.date).getTime()
+        return a.id - b.id
       case "az":
         return a.title.localeCompare(b.title)
       case "za":
@@ -116,7 +147,7 @@ export default function DashboardPage() {
         </Button>
         <div className="mb-10">
           <h1 className="text-3xl font-semibold text-white">Welcome back, Jessie</h1>
-          <p className="text-white/70 text-lg mt-2">Here are your generated scripts</p>
+          <p className="text-white/70 text-lg mt-2">Here are your liked script ideas</p>
         </div>
 
         {/* Action Bar */}
@@ -180,7 +211,7 @@ export default function DashboardPage() {
           {sortedScripts.map((script) => (
             <Card
               key={script.id}
-              className={`bg-white/10 border-none shadow-lg transition-all ${
+              className={`bg-white/10 border-none shadow-lg transition-all cursor-pointer ${
                 selectedScripts.includes(script.id) ? "ring-2 ring-purple-500" : ""
               }`}
             >
@@ -189,19 +220,41 @@ export default function DashboardPage() {
                   className={`w-5 h-5 rounded-full border-2 border-white flex items-center justify-center cursor-pointer ${
                     selectedScripts.includes(script.id) ? "bg-white" : ""
                   }`}
-                  onClick={() => toggleScriptSelection(script.id)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    toggleScriptSelection(script.id);
+                  }}
                 >
                   {selectedScripts.includes(script.id) && <Check className="h-3 w-3 text-black" />}
                 </div>
-                <CardTitle className="text-white text-lg">{script.title}</CardTitle>
+                <CardTitle 
+                  className="text-white text-lg cursor-pointer"
+                  onClick={() => {
+                    router.push(`/script-content?id=${script.id}&title=${encodeURIComponent(script.title)}&content=${encodeURIComponent(script.content)}`)
+                  }}
+                >
+                  {script.title}
+                </CardTitle>
               </CardHeader>
-              <CardContent>
+              <CardContent
+                onClick={() => {
+                  router.push(`/script-content?id=${script.id}&title=${encodeURIComponent(script.title)}&content=${encodeURIComponent(script.content)}`)
+                }}
+              >
                 <p className="text-white/70 text-sm line-clamp-3 mb-2">
-                  {script.content.slice(0, 150)}...
+                  {script.content}
                 </p>
-                <Badge variant="secondary" className="text-xs bg-white/20 text-white">
-                  {new Date(script.date).toLocaleDateString()}
-                </Badge>
+                <div className="flex items-center space-x-2">
+                  <Badge variant="secondary" className="text-xs bg-white/20 text-white">
+                    Liked
+                  </Badge>
+                  {script.hasVoice && (
+                    <Badge variant="secondary" className="text-xs bg-purple-500/20 text-white">
+                      <Mic className="h-3 w-3 mr-1" />
+                      Voice Recorded
+                    </Badge>
+                  )}
+                </div>
               </CardContent>
             </Card>
           ))}

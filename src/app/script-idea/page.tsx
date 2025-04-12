@@ -20,6 +20,8 @@ type ScriptIdea = {
   id: number
   topic: string
   tweet: string
+  isLiked?: boolean
+  hasVoice?: boolean
 }
 
 type XChannel = {
@@ -57,6 +59,8 @@ export default function DashboardPage() {
   const [ideaRatings, setIdeaRatings] = useState<Record<number, "up" | "down" | null>>({})
   const [recordingIdea, setRecordingIdea] = useState<number | null>(null)
   const [recordingTime, setRecordingTime] = useState(0)
+
+  const [likedIdeas, setLikedIdeas] = useState<ScriptIdea[]>([])
 
   const router = useRouter()
 
@@ -139,26 +143,20 @@ export default function DashboardPage() {
       [id]: prev[id] === rating ? null : rating,
     }))
 
-    // If the idea is liked (upvoted), generate multiple variations
+    // If the idea is liked (upvoted), add it to likedIdeas
     if (rating === "up" && ideaRatings[id] !== "up") {
-      try {
-        const selectedProduct = products[0] // Assuming we're using the first product
-        const response = await DataService.generateMultipleIdeas({
-          product_name: selectedProduct.name,
-          description: selectedProduct.description,
-          link: selectedProduct.link || "",
-          script_idea: scriptIdeas.find(idea => idea.id === id)?.tweet || "",
-        })
-
-        if (response && response.scripts) {
-          // Store the generated scripts in localStorage
-          localStorage.setItem('generatedScripts', JSON.stringify(response.scripts))
-          // Navigate to the generated-scripts page
-          router.push('/generated-scripts')
+      const idea = scriptIdeas.find(i => i.id === id)
+      if (idea) {
+        const updatedIdea = {
+          ...idea,
+          isLiked: true,
+          hasVoice: recordingIdea === id
         }
-      } catch (error) {
-        console.error("Error generating multiple ideas:", error)
+        setLikedIdeas(prev => [...prev, updatedIdea])
       }
+    } else if (rating === "down" || (rating === "up" && ideaRatings[id] === "up")) {
+      // Remove from likedIdeas if unliked
+      setLikedIdeas(prev => prev.filter(idea => idea.id !== id))
     }
   }
 
@@ -190,6 +188,13 @@ export default function DashboardPage() {
     const minutes = Math.floor(seconds / 60)
     const remainingSeconds = seconds % 60
     return `${minutes.toString().padStart(2, "0")}:${remainingSeconds.toString().padStart(2, "0")}`
+  }
+
+  const handleNext = () => {
+    // Store liked ideas in localStorage
+    localStorage.setItem('generatedScripts', JSON.stringify(likedIdeas))
+    // Navigate to generated-scripts page
+    router.push('/generated-scripts')
   }
 
   return (
@@ -488,6 +493,12 @@ Exclude violence and adult content"
                 </div>
               ))}
             </div>
+            <Button 
+              onClick={handleNext} 
+              className="bg-purple-600 hover:bg-purple-700 text-white my-6"
+            >
+              Next
+            </Button>
           </div>
         )}
       </div>
