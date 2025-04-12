@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Sidebar } from "@/components/Sidebar"
+import DataService from "@/app/service/DataService"
 
 type Product = {
   id: number
@@ -43,6 +44,7 @@ export default function DashboardPage() {
   const [newXChannel, setNewXChannel] = useState<Omit<XChannel, "id">>({ name: "", url: "" })
   const [showXChannels, setShowXChannels] = useState(false)
   const [expandedIdeas, setExpandedIdeas] = useState<number[]>([])
+  const [isGeneratingIdeas, setIsGeneratingIdeas] = useState(false)
 
   const [textFilter, setTextFilter] = useState<string>("")
   const [contentTypeFilters, setContentTypeFilters] = useState({
@@ -77,50 +79,38 @@ export default function DashboardPage() {
     setXChannels(xChannels.filter((channel) => channel.id !== id))
   }
 
-  const generateScriptIdeas = () => {
-    const newIdeas: ScriptIdea[] = Array.from({ length: 50 }, (_, i) => ({
-      id: i + 1,
-      topic: `Script idea ${i + 1} for ${products[0].name}`,
-      tweet: `This is a mock tweet that inspired the idea for ${products[0].name}. It would contain relevant content from Twitter that sparked this script idea. #${products[0].name} #ScriptIdea${i + 1}`,
-    }))
+  const generateScriptIdeas = async () => {
+    if (products.length === 0) {
+      console.error("No products available")
+      return
+    }
 
-    const lines = textFilter.toLowerCase().split("\n")
-    const includedTopics: string[] = []
-    const excludedTopics: string[] = []
+    setIsGeneratingIdeas(true)
+    try {
+      const response = await DataService.generateScriptIdeas({
+        product_name: products[0].name,
+        description: products[0].description,
+        link: products[0].link || "",
+        script_idea: textFilter,
+      })
 
-    lines.forEach((line) => {
-      line = line.trim()
-      if (line.startsWith("i want") || line.startsWith("include")) {
-        includedTopics.push(
-          ...line
-            .replace(/^i want|include/i, "")
-            .trim()
-            .split(/\s+/),
-        )
-      } else if (line.startsWith("i don't want") || line.startsWith("i do not want") || line.startsWith("exclude")) {
-        excludedTopics.push(
-          ...line
-            .replace(/^i don't want|i do not want|exclude/i, "")
-            .trim()
-            .split(/\s+/),
-        )
+      console.log("response", response)
+
+      if (response) {
+        const newIdeas: ScriptIdea[] = response.ideas.map((idea: any, index: number) => ({
+          id: index + 1,
+          topic: idea.title,
+          tweet: idea.content,
+        }))
+        setScriptIdeas(newIdeas)
+      } else {
+        console.error("Failed to generate script ideas")
       }
-    })
-
-    const filteredIdeas = newIdeas.filter((idea) => {
-      const lowerTopic = idea.topic.toLowerCase()
-      const lowerTweet = idea.tweet.toLowerCase()
-
-      const hasIncludedTopic =
-        includedTopics.length === 0 ||
-        includedTopics.some((topic) => lowerTopic.includes(topic) || lowerTweet.includes(topic))
-
-      const hasExcludedTopic = excludedTopics.some((topic) => lowerTopic.includes(topic) || lowerTweet.includes(topic))
-
-      return hasIncludedTopic && !hasExcludedTopic
-    })
-
-    setScriptIdeas(filteredIdeas)
+    } catch (error) {
+      console.error("Error generating script ideas:", error)
+    } finally {
+      setIsGeneratingIdeas(false)
+    }
   }
 
   const handleContentTypeChange = (type: keyof typeof contentTypeFilters) => {
@@ -385,15 +375,19 @@ Exclude violence and adult content"
             </div>
           </div>
 
-          <Button onClick={generateScriptIdeas} className="bg-purple-600 hover:bg-purple-700 text-white">
-            Generate Script Ideas
+          <Button 
+            onClick={generateScriptIdeas} 
+            className="bg-purple-600 hover:bg-purple-700 text-white"
+            disabled={isGeneratingIdeas}
+          >
+            {isGeneratingIdeas ? "Generating..." : "Generate Script Ideas"}
           </Button>
         </div>
 
         {/* Script Ideas */}
         {scriptIdeas.length > 0 && (
           <div className="mb-8">
-            <h2 className="text-xl font-semibold text-white mb-4">Script Ideas</h2>
+            <h2 className="text-xl font-semibold text-white mb-4">Script Ideas ({scriptIdeas.length})</h2>
             <p className="text-white/70 mb-4">Explore the generated script ideas</p>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {scriptIdeas.map((idea) => (

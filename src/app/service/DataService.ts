@@ -53,6 +53,18 @@ const DataService = {
     api(`/scripts/${scriptId}`, {
       method: 'DELETE',
     }),
+
+  // Script Ideas
+  generateScriptIdeas: (data: {
+    product_name: string
+    description: string
+    link: string
+    script_idea: string
+  }) =>
+    api('/generate-script-idea', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
 }
 
 export default DataService
