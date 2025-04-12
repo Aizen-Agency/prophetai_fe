@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Check, ArrowLeft, Plus, ChevronDown } from "lucide-react"
 import { Button } from "@/components/ui/button"
 // import { toast } from "@/components/ui/use-toast"
@@ -11,132 +11,27 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Sidebar } from "@/components/Sidebar"
 import { useRouter } from 'next/navigation'
 
-
-const scriptTypes = [
-  { id: "copy1", label: "Instagram Reels Copy 1" },
-  { id: "copy2", label: "Instagram Reels Copy 2" },
-  { id: "copy3", label: "Instagram Reels Copy 3" },
-  { id: "copy4", label: "Instagram Reels Copy 4" },
-  { id: "copy5", label: "Instagram Reels Copy 5" },
-  { id: "copy6", label: "Instagram Reels Copy 6" },
-]
-
-const scripts = {
-  copy1: {
-    title: "AntiProphet AI: Content Creation Revolution (Instagram Reels Copy 1)",
-    content: `[Upbeat music starts]
-👋 Hey creators! Tired of staring at blank screens?
-🤖 Meet AntiProphet AI, your new content bestie!
-💡 Input topic, get instant content magic!
-📱 Social posts, blogs, scripts - you name it!
-🎨 Learns your style, sounds like you!
-🔍 SEO optimized for more views!
-🚀 Boost productivity, save time!
-😎 User-friendly, no tech wizardry needed!
-🔥 Say bye to writer's block, hello to wow content!
-🌟 Try AntiProphet AI now!
-[Call to action: Swipe up to revolutionize your content game!]
-#ContentCreation #AIAssistant #AntiProphetAI`,
-    date: new Date(),
-  },
-  copy2: {
-    title: "AntiProphet AI: Content Creation Revolution (Instagram Reels Copy 2)",
-    content: `[Energetic beat drops]
-🎭 Content creators, listen up!
-😓 Struggling with writer's block?
-🚀 Introducing AntiProphet AI!
-⚡ Instant content generation
-🧠 Learns your unique style
-📊 SEO optimization built-in
-⏱️ Save hours on content creation
-🌈 Multiple formats, one tool
-💪 Empower your creativity
-🔥 Stand out in the digital noise
-[Visual: "Try AntiProphet AI Free" button appears]
-Don't miss out on the future of content creation!
-#AntiProphetAI #ContentRevolution #CreatorTools`,
-    date: new Date(),
-  },
-  copy3: {
-    title: "AntiProphet AI: Content Creation Revolution (Instagram Reels Copy 3)",
-    content: `[Upbeat electronic music]
-👀 Attention all content creators!
-🤯 Feeling overwhelmed by content demands?
-🦸‍♀️ AntiProphet AI to the rescue!
-🎨 Generate unique, on-brand content
-⚡ Lightning-fast creation process
-📈 Built-in SEO for maximum reach
-🔄 Adapts to your style over time
-💡 Never run out of ideas again
-🚀 Skyrocket your content strategy
-✨ Unlock your creative potential
-[Text overlay: "Join the AI content revolution"]
-Transform your content game with AntiProphet AI!
-#AIContentCreation #DigitalMarketing #AntiProphetAI`,
-    date: new Date(),
-  },
-  copy4: {
-    title: "AntiProphet AI: Content Creation Revolution (Instagram Reels Copy 4)",
-    content: `[Soft, inspiring background music]
-📝 Content creation got you stressed?
-😴 Tired of late nights brainstorming?
-🌟 Meet AntiProphet AI - your creative companion
-🧠 AI-powered content generation
-🎯 Tailored to your brand voice
-📊 SEO-optimized for better reach
-⏰ Save time, boost productivity
-🔍 Never struggle for ideas again
-💪 Empower your content strategy
-🚀 Take your brand to new heights
-[Visual: "Start your free trial" CTA]
-Experience the future of content creation now!
-#ContentCreation #AITechnology #AntiProphetAI`,
-    date: new Date(),
-  },
-  copy5: {
-    title: "AntiProphet AI: Content Creation Revolution (Instagram Reels Copy 5)",
-    content: `[Upbeat, motivational music]
-🎭 Calling all content creators!
-😓 Exhausted from constant content demands?
-💡 Discover AntiProphet AI
-🚀 Revolutionize your content strategy
-⚡ Generate ideas in seconds
-📝 Create blogs, social posts, and more
-🧠 AI learns and adapts to your style
-📈 Built-in SEO for maximum impact
-⏳ Save time, reduce stress
-🌈 Unleash your creative potential
-[Text appears: "Join the AI content revolution"]
-Level up your content game with AntiProphet AI!
-#AIContentCreator #DigitalMarketing #AntiProphetAI`,
-    date: new Date(),
-  },
-  copy6: {
-    title: "AntiProphet AI: Content Creation Revolution (Instagram Reels Copy 6)",
-    content: `[Dynamic, energetic music]
-👋 Hey there, content creators!
-😪 Tired of content creation burnout?
-🦸 AntiProphet AI is here to save the day!
-🧠 AI-powered content generation
-🎨 Maintains your unique brand voice
-📊 SEO-optimized for better visibility
-⚡ Create content in minutes, not hours
-📱 Perfect for social media, blogs, and more
-🚀 Boost your productivity and reach
-💪 Stay ahead of the competition
-[Visual: "Try AntiProphet AI Now" button]
-Revolutionize your content strategy today!
-#ContentCreation #AIAssistant #AntiProphetAI`,
-    date: new Date(),
-  },
+type Script = {
+  id: string
+  title: string
+  content: string
+  date: string
 }
 
 export default function DashboardPage() {
   const router = useRouter()
-
   const [selectedScripts, setSelectedScripts] = useState<string[]>([])
   const [isGenerating, setIsGenerating] = useState(false)
   const [sortOption, setSortOption] = useState<"newest" | "oldest" | "az" | "za">("newest")
+  const [scripts, setScripts] = useState<Script[]>([])
+
+  useEffect(() => {
+    // Load scripts from localStorage
+    const storedScripts = localStorage.getItem('generatedScripts')
+    if (storedScripts) {
+      setScripts(JSON.parse(storedScripts))
+    }
+  }, [])
 
   const toggleScriptSelection = (scriptId: string) => {
     setSelectedScripts((prev) => {
@@ -149,10 +44,10 @@ export default function DashboardPage() {
   }
 
   const handleSelectAll = () => {
-    if (selectedScripts.length === scriptTypes.length) {
+    if (selectedScripts.length === scripts.length) {
       setSelectedScripts([])
     } else {
-      setSelectedScripts(scriptTypes.map((script) => script.id))
+      setSelectedScripts(scripts.map((script) => script.id))
     }
   }
 
@@ -181,18 +76,16 @@ export default function DashboardPage() {
     }, 2000)
   }
 
-  const sortedScriptTypes = [...scriptTypes].sort((a, b) => {
-    const scriptA = scripts[a.id as keyof typeof scripts]
-    const scriptB = scripts[b.id as keyof typeof scripts]
+  const sortedScripts = [...scripts].sort((a, b) => {
     switch (sortOption) {
       case "newest":
-        return scriptB.date.getTime() - scriptA.date.getTime()
+        return new Date(b.date).getTime() - new Date(a.date).getTime()
       case "oldest":
-        return scriptA.date.getTime() - scriptB.date.getTime()
+        return new Date(a.date).getTime() - new Date(b.date).getTime()
       case "az":
-        return a.label.localeCompare(b.label)
+        return a.title.localeCompare(b.title)
       case "za":
-        return b.label.localeCompare(a.label)
+        return b.title.localeCompare(a.title)
       default:
         return 0
     }
@@ -216,10 +109,7 @@ export default function DashboardPage() {
           variant="ghost"
           size="icon"
           className="mb-4"
-          onClick={() => {
-            // Add navigation logic here
-            console.log("Back button clicked")
-          }}
+          onClick={() => router.back()}
         >
           <ArrowLeft className="h-6 w-6" />
           <span className="sr-only">Go back</span>
@@ -236,11 +126,11 @@ export default function DashboardPage() {
               <CardContent className="flex items-center p-2">
                 <div
                   className={`w-5 h-5 rounded-full border-2 border-white mr-2 flex items-center justify-center cursor-pointer ${
-                    selectedScripts.length === scriptTypes.length ? "bg-white" : ""
+                    selectedScripts.length === scripts.length ? "bg-white" : ""
                   }`}
                   onClick={handleSelectAll}
                 >
-                  {selectedScripts.length === scriptTypes.length && <Check className="h-3 w-3 text-black" />}
+                  {selectedScripts.length === scripts.length && <Check className="h-3 w-3 text-black" />}
                 </div>
                 <Label className="text-white cursor-pointer" onClick={handleSelectAll}>
                   Select All
@@ -248,7 +138,7 @@ export default function DashboardPage() {
               </CardContent>
             </Card>
             <div className="text-white/70">
-              {selectedScripts.length} of {scriptTypes.length} selected
+              {selectedScripts.length} of {scripts.length} selected
             </div>
           </div>
           <div className="flex items-center space-x-4">
@@ -287,30 +177,30 @@ export default function DashboardPage() {
 
         {/* Script List */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-10">
-          {sortedScriptTypes.map((type) => (
+          {sortedScripts.map((script) => (
             <Card
-              key={type.id}
+              key={script.id}
               className={`bg-white/10 border-none shadow-lg transition-all ${
-                selectedScripts.includes(type.id) ? "ring-2 ring-purple-500" : ""
+                selectedScripts.includes(script.id) ? "ring-2 ring-purple-500" : ""
               }`}
             >
               <CardHeader className="flex flex-row items-center space-x-4 pb-2">
                 <div
                   className={`w-5 h-5 rounded-full border-2 border-white flex items-center justify-center cursor-pointer ${
-                    selectedScripts.includes(type.id) ? "bg-white" : ""
+                    selectedScripts.includes(script.id) ? "bg-white" : ""
                   }`}
-                  onClick={() => toggleScriptSelection(type.id)}
+                  onClick={() => toggleScriptSelection(script.id)}
                 >
-                  {selectedScripts.includes(type.id) && <Check className="h-3 w-3 text-black" />}
+                  {selectedScripts.includes(script.id) && <Check className="h-3 w-3 text-black" />}
                 </div>
-                <CardTitle className="text-white text-lg">{type.label}</CardTitle>
+                <CardTitle className="text-white text-lg">{script.title}</CardTitle>
               </CardHeader>
               <CardContent>
                 <p className="text-white/70 text-sm line-clamp-3 mb-2">
-                  {scripts[type.id as keyof typeof scripts].content.slice(0, 150)}...
+                  {script.content.slice(0, 150)}...
                 </p>
                 <Badge variant="secondary" className="text-xs bg-white/20 text-white">
-                  {new Date(scripts[type.id as keyof typeof scripts].date).toLocaleDateString()}
+                  {new Date(script.date).toLocaleDateString()}
                 </Badge>
               </CardContent>
             </Card>

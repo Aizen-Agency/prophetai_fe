@@ -65,6 +65,17 @@ const DataService = {
       method: 'POST',
       body: JSON.stringify(data),
     }),
+
+  generateMultipleIdeas: (data: {
+    product_name: string
+    description: string
+    link: string
+    script_idea: string
+  }) =>
+    api('/generate-multiple-idea', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
 }
 
 export default DataService

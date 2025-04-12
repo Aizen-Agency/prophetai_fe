@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Sidebar } from "@/components/Sidebar"
 import DataService from "@/app/service/DataService"
+import { useRouter } from "next/navigation"
 
 type Product = {
   id: number
@@ -56,6 +57,8 @@ export default function DashboardPage() {
   const [ideaRatings, setIdeaRatings] = useState<Record<number, "up" | "down" | null>>({})
   const [recordingIdea, setRecordingIdea] = useState<number | null>(null)
   const [recordingTime, setRecordingTime] = useState(0)
+
+  const router = useRouter()
 
   const addProduct = () => {
     if (newProduct.name && newProduct.description) {
@@ -130,11 +133,33 @@ export default function DashboardPage() {
     setShowXChannels(!showXChannels)
   }
 
-  const rateIdea = (id: number, rating: "up" | "down") => {
+  const rateIdea = async (id: number, rating: "up" | "down") => {
     setIdeaRatings((prev) => ({
       ...prev,
       [id]: prev[id] === rating ? null : rating,
     }))
+
+    // If the idea is liked (upvoted), generate multiple variations
+    if (rating === "up" && ideaRatings[id] !== "up") {
+      try {
+        const selectedProduct = products[0] // Assuming we're using the first product
+        const response = await DataService.generateMultipleIdeas({
+          product_name: selectedProduct.name,
+          description: selectedProduct.description,
+          link: selectedProduct.link || "",
+          script_idea: scriptIdeas.find(idea => idea.id === id)?.tweet || "",
+        })
+
+        if (response && response.scripts) {
+          // Store the generated scripts in localStorage
+          localStorage.setItem('generatedScripts', JSON.stringify(response.scripts))
+          // Navigate to the generated-scripts page
+          router.push('/generated-scripts')
+        }
+      } catch (error) {
+        console.error("Error generating multiple ideas:", error)
+      }
+    }
   }
 
   const toggleRecording = (id: number) => {
