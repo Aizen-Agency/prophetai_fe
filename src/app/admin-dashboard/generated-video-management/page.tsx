@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input"
 import { Download, Search, ArrowUpDown, User } from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import { Sidebar } from "@/components/sidebar"
+import { AdminSidebar } from "@/components/admin-sidebar"
 import DataService from "@/app/service/DataService"
 
 interface User {
@@ -127,10 +127,12 @@ export default function AdminDashboard(): JSX.Element {
       <div className="absolute inset-0 bg-gradient-to-br from-[#080f25]/80 via-[#1a1c2e]/60 to-[#2d1b3d]/40"></div>
 
       {/* Sidebar Component */}
-      <Sidebar />
+      <div className="sticky top-0 h-screen">
+        <AdminSidebar />
+      </div>
 
       {/* Main Content */}
-      <div className="flex-grow p-10 relative z-10 overflow-y-auto">
+      <div className="flex-1 p-10 relative z-10 overflow-y-auto">
         <h1 className="text-3xl font-semibold text-white mb-6">AI Video Management</h1>
 
         {/* User List */}

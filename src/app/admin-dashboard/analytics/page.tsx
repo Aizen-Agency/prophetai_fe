@@ -23,7 +23,7 @@ import { Input } from "@/components/ui/input"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer } from "recharts"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Sidebar } from "@/components/sidebar"
+import { AdminSidebar } from "@/components/admin-sidebar"
 import type { User , DailyView, InstagramData, InstagramSummary, PerformanceFilter, SortBy, SortOrder } from "./types"
 
 // Sample user data
@@ -219,10 +219,12 @@ export default function AdminDashboard() {
       <div className="absolute inset-0 bg-gradient-to-br from-[#080f25]/80 via-[#1a1c2e]/60 to-[#2d1b3d]/40"></div>
 
       {/* Sidebar */}
-      <Sidebar />
+      <div className="sticky top-0 h-screen">
+        <AdminSidebar />
+      </div>
 
       {/* Main Content */}
-      <div className="flex-grow p-10 relative z-10 overflow-y-auto">
+      <div className="flex-1 p-10 relative z-10 overflow-y-auto">
         <div className="mb-8">
           <h2 className="text-xl font-semibold text-white mb-4">Select User</h2>
           <div className="flex space-x-4 overflow-x-auto pb-4">

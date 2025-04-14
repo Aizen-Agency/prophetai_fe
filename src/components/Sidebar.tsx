@@ -12,8 +12,10 @@ interface SidebarProps {
 const sidebarItems = [
   { icon: LayoutDashboard, label: "Dashboard", id: "dashboard", link : 'dashboard' },
   { icon: FileText, label: "Scripts", id: "scripts" , link : "script-idea" },
+  { icon: Send, label: "Script Generator", id: "script-generator" , link : "script-generator" },
   { icon: Video, label: "Videos", id: "videos" , link : "your-video" },
-  { icon: Send, label: "Posting", id: "posting" , link : "posting" },
+  { icon: LayoutDashboard, label: "Analytics", id: "analytics", link : 'performance-tracker' },
+
 ]
 
 
@@ -38,7 +40,7 @@ export function Sidebar({ activeItem = "scripts" }: SidebarProps) {
         <span className="text-sm font-semibold text-center">AntiProphet AI</span>
       </div>
 
-      <nav className="space-y-12 text-white flex-grow">
+      <nav className="space-y-6 text-white flex-grow">
         {sidebarItems.map((item) => (
           <div
             key={item.id}
