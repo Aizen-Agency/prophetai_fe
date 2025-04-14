@@ -176,6 +176,28 @@ const DataService = {
       console.error('Error fetching videos:', error);
       throw error;
     }
+  },
+
+  // Admin Routes
+  getAllVideos: async () => {
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/admin/videos`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch all videos');
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Error fetching all videos:', error);
+      throw error;
+    }
   }
 }
 

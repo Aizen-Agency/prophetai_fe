@@ -7,7 +7,8 @@ import { Input } from "@/components/ui/input"
 import { Download, Search, ArrowUpDown, User } from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import { Sidebar } from "@/components/Sidebar"
+import { Sidebar } from "@/components/sidebar"
+import DataService from "@/app/service/DataService"
 
 interface User {
   id: number
@@ -26,92 +27,40 @@ interface Video {
   duration: string
   quality: string
   createdAt: string
+  user: User
 }
 
 type SortOption = "nameAsc" | "nameDesc" | "sizeAsc" | "sizeDesc" | "dateAsc" | "dateDesc"
 
-const initialUsers: User[] = [
-  { id: 1, name: "Alice Johnson", email: "alice@example.com", avatar: "/placeholder.svg?height=32&width=32" },
-  { id: 2, name: "Bob Smith", email: "bob@example.com", avatar: "/placeholder.svg?height=32&width=32" },
-  { id: 3, name: "Charlie Brown", email: "charlie@example.com", avatar: "/placeholder.svg?height=32&width=32" },
-]
-
-const initialVideos: Video[] = [
-  {
-    id: 1,
-    name: "AI Product Showcase",
-    size: 15.7,
-    thumbnail: "/placeholder.svg?height=200&width=400&text=AI+Product+Showcase",
-    userId: 1,
-    aiModel: "GPT-4 Vision",
-    duration: "2:30",
-    quality: "4K",
-    createdAt: "2023-11-15",
-  },
-  {
-    id: 2,
-    name: "Virtual Company Tour",
-    size: 22.3,
-    thumbnail: "/placeholder.svg?height=200&width=400&text=Virtual+Company+Tour",
-    userId: 2,
-    aiModel: "DALL-E 3",
-    duration: "5:00",
-    quality: "1080p",
-    createdAt: "2023-11-12",
-  },
-  {
-    id: 3,
-    name: "AI-Powered Tutorial",
-    size: 18.9,
-    thumbnail: "/placeholder.svg?height=200&width=400&text=AI-Powered+Tutorial",
-    userId: 3,
-    aiModel: "Midjourney v5",
-    duration: "3:45",
-    quality: "1440p",
-    createdAt: "2023-11-10",
-  },
-  {
-    id: 4,
-    name: "Personalized Ad Campaign",
-    size: 25.1,
-    thumbnail: "/placeholder.svg?height=200&width=400&text=Personalized+Ad+Campaign",
-    userId: 1,
-    aiModel: "Stable Diffusion XL",
-    duration: "0:45",
-    quality: "4K",
-    createdAt: "2023-11-08",
-  },
-  {
-    id: 5,
-    name: "AI-Generated Testimonial",
-    size: 12.6,
-    thumbnail: "/placeholder.svg?height=200&width=400&text=AI-Generated+Testimonial",
-    userId: 2,
-    aiModel: "GPT-4 Vision",
-    duration: "1:30",
-    quality: "1080p",
-    createdAt: "2023-11-05",
-  },
-  {
-    id: 6,
-    name: "Future Tech Concept",
-    size: 30.2,
-    thumbnail: "/placeholder.svg?height=200&width=400&text=Future+Tech+Concept",
-    userId: 3,
-    aiModel: "DALL-E 3",
-    duration: "4:15",
-    quality: "2160p",
-    createdAt: "2023-11-01",
-  },
-]
-
 export default function AdminDashboard(): JSX.Element {
-  const [users] = useState<User[]>(initialUsers)
-  const [videos] = useState<Video[]>(initialVideos)
+  const [videos, setVideos] = useState<Video[]>([])
   const [searchQuery, setSearchQuery] = useState<string>("")
   const [sortOption, setSortOption] = useState<SortOption>("nameAsc")
-  const [filteredVideos, setFilteredVideos] = useState<Video[]>(videos)
+  const [filteredVideos, setFilteredVideos] = useState<Video[]>([])
   const [selectedUser, setSelectedUser] = useState<number | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    const fetchVideos = async () => {
+      try {
+        const response = await DataService.getAllVideos()
+        if (response.success) {
+          setVideos(response.videos)
+          setFilteredVideos(response.videos)
+        } else {
+          setError('Failed to fetch videos')
+        }
+      } catch (err) {
+        setError('Error fetching videos')
+        console.error(err)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchVideos()
+  }, [])
 
   useEffect(() => {
     const sorted = [...videos].filter(
@@ -143,6 +92,30 @@ export default function AdminDashboard(): JSX.Element {
 
     setFilteredVideos(sorted)
   }, [videos, searchQuery, sortOption, selectedUser])
+
+  if (loading) {
+    return (
+      <div className="min-h-screen text-white flex items-center justify-center">
+        <div className="text-xl">Loading...</div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen text-white flex items-center justify-center">
+        <div className="text-xl text-red-500">{error}</div>
+      </div>
+    )
+  }
+
+  // Get unique users from videos
+  const users = Array.from(new Set(videos.map(video => video.user))).map(user => ({
+    id: user.id,
+    name: user.name,
+    email: user.email,
+    avatar: user.avatar
+  }))
 
   return (
     <div className="min-h-screen text-white flex relative overflow-hidden">
@@ -222,52 +195,49 @@ export default function AdminDashboard(): JSX.Element {
             </DropdownMenu>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredVideos.map((video) => {
-              const user = users.find((u) => u.id === video.userId)
-              return (
-                <div key={video.id} className="w-full">
-                  <Card className="bg-[#151F38] border-0 shadow-lg shadow-black/25 overflow-hidden">
-                    <div className="relative aspect-video bg-gray-800">
-                      <img
-                        src={video.thumbnail || "/placeholder.svg"}
-                        alt={video.name}
-                        className="w-full h-full object-cover"
-                      />
-                      <div className="absolute top-2 left-2 bg-black/50 text-white text-xs px-2 py-1 rounded">
-                        {video.aiModel}
-                      </div>
-                      <Button
-                        variant="default"
-                        size="icon"
-                        className="absolute top-2 right-2 rounded-full bg-gray-700/50 hover:bg-gray-600/60 backdrop-blur-sm transition-all duration-300 border border-gray-500/30 w-10 h-10 p-2 group z-10"
-                      >
-                        <Download className="w-5 h-5 text-gray-300 group-hover:text-gray-100 group-hover:scale-110 transition-all duration-300" />
-                        <span className="sr-only">Download</span>
-                      </Button>
+            {filteredVideos.map((video) => (
+              <div key={video.id} className="w-full">
+                <Card className="bg-[#151F38] border-0 shadow-lg shadow-black/25 overflow-hidden">
+                  <div className="relative aspect-video bg-gray-800">
+                    <img
+                      src={video.thumbnail || "/placeholder.svg"}
+                      alt={video.name}
+                      className="w-full h-full object-cover"
+                    />
+                    <div className="absolute top-2 left-2 bg-black/50 text-white text-xs px-2 py-1 rounded">
+                      {video.aiModel}
                     </div>
-                    <CardContent className="p-4">
-                      <h3 className="text-lg font-semibold text-white truncate">{video.name}</h3>
-                      <div className="flex justify-between items-center mt-2">
-                        <p className="text-sm text-gray-400">{video.size.toFixed(2)} MB</p>
-                        <p className="text-sm text-gray-400">
-                          {video.duration} | {video.quality}
-                        </p>
+                    <Button
+                      variant="default"
+                      size="icon"
+                      className="absolute top-2 right-2 rounded-full bg-gray-700/50 hover:bg-gray-600/60 backdrop-blur-sm transition-all duration-300 border border-gray-500/30 w-10 h-10 p-2 group z-10"
+                    >
+                      <Download className="w-5 h-5 text-gray-300 group-hover:text-gray-100 group-hover:scale-110 transition-all duration-300" />
+                      <span className="sr-only">Download</span>
+                    </Button>
+                  </div>
+                  <CardContent className="p-4">
+                    <h3 className="text-lg font-semibold text-white truncate">{video.name}</h3>
+                    <div className="flex justify-between items-center mt-2">
+                      <p className="text-sm text-gray-400">{video.size.toFixed(2)} MB</p>
+                      <p className="text-sm text-gray-400">
+                        {video.duration} | {video.quality}
+                      </p>
+                    </div>
+                    <div className="flex items-center justify-between mt-3">
+                      <div className="flex items-center">
+                        <Avatar className="w-6 h-6 mr-2">
+                          <AvatarImage src={video.user.avatar || ""} alt={video.user.name} />
+                          <AvatarFallback>{video.user.name[0]}</AvatarFallback>
+                        </Avatar>
+                        <span className="text-sm text-gray-300">{video.user.name}</span>
                       </div>
-                      <div className="flex items-center justify-between mt-3">
-                        <div className="flex items-center">
-                          <Avatar className="w-6 h-6 mr-2">
-                            <AvatarImage src={user?.avatar || ""} alt={user?.name || ""} />
-                            <AvatarFallback>{user?.name?.[0] || "?"}</AvatarFallback>
-                          </Avatar>
-                          <span className="text-sm text-gray-300">{user?.name}</span>
-                        </div>
-                        <span className="text-xs text-gray-400">{video.createdAt}</span>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </div>
-              )
-            })}
+                      <span className="text-xs text-gray-400">{video.createdAt}</span>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            ))}
           </div>
         </div>
       </div>

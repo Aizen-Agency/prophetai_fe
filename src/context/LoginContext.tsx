@@ -6,7 +6,8 @@ import Cookies from 'js-cookie';  // You'll need to install this package
 interface LoginContextProps {
   isLoggedIn: boolean;
   username: string;
-  login: (user: string) => void;
+  isAdmin: boolean;
+  login: (user: string, isAdmin: boolean) => void;
   logout: () => void;
 }
 
@@ -42,12 +43,17 @@ export const LoginProvider: React.FC<LoginProviderProps> = ({ children }) => {
     return "";
   });
 
- 
+  const [isAdmin, setIsAdmin] = useState<boolean>(() => {
+    if (typeof window !== 'undefined') {
+      return Cookies.get("isAdmin") === "true";
+    }
+    return false;
+  });
 
-  const login = (user: string) => {
+  const login = (user: string, admin: boolean) => {
     setIsLoggedIn(true);
     setUsername(user);
-   
+    setIsAdmin(admin);
     
     Cookies.set("isLoggedIn", "true", { 
       secure: true,
@@ -59,17 +65,24 @@ export const LoginProvider: React.FC<LoginProviderProps> = ({ children }) => {
       sameSite: 'strict',
       expires: 7
     });
+    Cookies.set("isAdmin", admin.toString(), {
+      secure: true,
+      sameSite: 'strict',
+      expires: 7
+    });
   };
 
   const logout = () => {
     setIsLoggedIn(false);
     setUsername("");
+    setIsAdmin(false);
     Cookies.remove("isLoggedIn");
     Cookies.remove("username");
+    Cookies.remove("isAdmin");
   };
 
   return (
-    <LoginContext.Provider value={{ isLoggedIn, username, login, logout }}>
+    <LoginContext.Provider value={{ isLoggedIn, username, isAdmin, login, logout }}>
       {children}
     </LoginContext.Provider>
   );

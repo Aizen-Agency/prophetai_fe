@@ -27,8 +27,12 @@ function LoginForm() {
       const response = await DataService.login({email : email , password : password});
 
       if (response) {
-        login(email);
-        router.push('/dashboard')
+        login(email, response.user.isAdmin);
+        if (response.user.isAdmin) {
+          router.push('/admin-dashboard/analytics');
+        } else {
+          router.push('/dashboard');
+        }
       } else {
         setError(response.error || 'An error occurred. Please try again.');
       }
