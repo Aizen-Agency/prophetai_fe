@@ -25,13 +25,12 @@ function LoginForm() {
 
     try {
       const response = await DataService.login({email : email , password : password});
-      const data = await response.json();
 
-      if (response.ok) {
+      if (response) {
         login(email);
         router.push('/dashboard')
       } else {
-        setError(data.error || 'An error occurred. Please try again.');
+        setError(response.error || 'An error occurred. Please try again.');
       }
     } catch (error) {
       console.error('Login error:', error);

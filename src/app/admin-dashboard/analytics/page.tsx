@@ -23,7 +23,7 @@ import { Input } from "@/components/ui/input"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer } from "recharts"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Sidebar } from "@/components/Sidebar"
+import { Sidebar } from "@/components/sidebar"
 import type { User , DailyView, InstagramData, InstagramSummary, PerformanceFilter, SortBy, SortOrder } from "./types"
 
 // Sample user data

@@ -23,7 +23,11 @@ const DataService = {
     }),
 
   // Dashboard
-  getInsights: (userId: number) => api(`/insights/${userId}`),
+  getInsights: (userId: number) => fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/insights/${userId}`, {
+    method: 'GET',
+    credentials: 'include',
+  }),
+
 
   // Videos
   getVideos: (userId: number) => api(`/videos/${userId}`),
@@ -37,20 +41,6 @@ const DataService = {
 
   deleteVideo: (videoId: number) =>
     api(`/videos/${videoId}`, {
-      method: 'DELETE',
-    }),
-
-  // Scripts
-  getScripts: (userId: number) => api(`/scripts/${userId}`),
-
-  uploadScript: (data: { userId: number; title: string; content: string }) =>
-    api('/scripts', {
-      method: 'POST',
-      body: JSON.stringify(data),
-    }),
-
-  deleteScript: (scriptId: number) =>
-    api(`/scripts/${scriptId}`, {
       method: 'DELETE',
     }),
 
