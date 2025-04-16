@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { Sidebar } from "@/components/Sidebar"
+import { Sidebar } from "@/components/sidebar"
 import { DashboardContent } from "./components/dashboard-content"
 import { Background } from "./components/background"
 import { chartColors } from "./data/data"
