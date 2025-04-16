@@ -5,7 +5,7 @@ import { LayoutDashboard, Plus, X, Twitter, ChevronDown, ChevronUp, ThumbsUp, Th
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Sidebar } from "@/components/sidebar"  
+import { Sidebar } from "@/components/Sidebar"  
 import DataService from "@/app/service/DataService"
 import { useRouter } from "next/navigation"
 import { getCookie } from "@/lib/utils"

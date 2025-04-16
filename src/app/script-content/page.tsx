@@ -9,7 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
-import { Sidebar } from "@/components/sidebar"
+import { Sidebar } from "@/components/Sidebar"
 import { useRouter, useSearchParams } from 'next/navigation'
 import DataService from "@/app/service/DataService"
 import { useLogin } from "@/context/LoginContext"

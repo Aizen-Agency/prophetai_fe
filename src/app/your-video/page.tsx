@@ -4,7 +4,7 @@ import { useState, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { ArrowLeft, Play } from "lucide-react"
-import { Sidebar } from "@/components/sidebar"
+import { Sidebar } from "@/components/Sidebar"
 import { useRouter } from 'next/navigation'
 import DataService from "@/app/service/DataService"
 

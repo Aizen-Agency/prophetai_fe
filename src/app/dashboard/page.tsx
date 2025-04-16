@@ -1,9 +1,9 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { Sidebar } from "@/components/sidebar"
-import { DashboardContent } from "./components/dashboard-content"
-import { Background } from "./components/background"
+import { Sidebar } from "@/components/Sidebar"
+import { DashboardContent } from "./component/dashboard-content"
+import { Background } from "./component/background"
 import { chartColors } from "./data/data"
 import DataService from "../service/DataService"
 import { useLogin } from "@/context/LoginContext"
