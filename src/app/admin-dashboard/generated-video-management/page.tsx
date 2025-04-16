@@ -45,7 +45,7 @@ export default function AdminDashboard(): JSX.Element {
     const fetchVideos = async () => {
       try {
         const response = await DataService.getAllVideos()
-        if (response.success) {
+        if (response) {
           setVideos(response.videos)
           setFilteredVideos(response.videos)
         } else {
@@ -65,28 +65,28 @@ export default function AdminDashboard(): JSX.Element {
   useEffect(() => {
     const sorted = [...videos].filter(
       (video) =>
-        video.name.toLowerCase().includes(searchQuery.toLowerCase()) &&
+        (video.name?.toLowerCase() || '').includes(searchQuery.toLowerCase()) &&
         (!selectedUser || video.userId === selectedUser),
     )
 
     switch (sortOption) {
       case "nameAsc":
-        sorted.sort((a, b) => a.name.localeCompare(b.name))
+        sorted.sort((a, b) => (a.name || '').localeCompare(b.name || ''))
         break
       case "nameDesc":
-        sorted.sort((a, b) => b.name.localeCompare(a.name))
+        sorted.sort((a, b) => (b.name || '').localeCompare(a.name || ''))
         break
       case "sizeAsc":
-        sorted.sort((a, b) => a.size - b.size)
+        sorted.sort((a, b) => (a.size || 0) - (b.size || 0))
         break
       case "sizeDesc":
-        sorted.sort((a, b) => b.size - a.size)
+        sorted.sort((a, b) => (b.size || 0) - (a.size || 0))
         break
       case "dateAsc":
-        sorted.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())
+        sorted.sort((a, b) => new Date(a.createdAt || 0).getTime() - new Date(b.createdAt || 0).getTime())
         break
       case "dateDesc":
-        sorted.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+        sorted.sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime())
         break
     }
 
@@ -221,7 +221,7 @@ export default function AdminDashboard(): JSX.Element {
                   <CardContent className="p-4">
                     <h3 className="text-lg font-semibold text-white truncate">{video.name}</h3>
                     <div className="flex justify-between items-center mt-2">
-                      <p className="text-sm text-gray-400">{video.size.toFixed(2)} MB</p>
+                      <p className="text-sm text-gray-400">{video.size}</p>
                       <p className="text-sm text-gray-400">
                         {video.duration} | {video.quality}
                       </p>
