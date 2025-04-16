@@ -25,20 +25,15 @@ function LoginForm() {
 
     try {
       const response = await DataService.login({email : email , password : password});
-
-      if (response) {
-        login(email, response.user.isAdmin);
-        if (response.user.isAdmin) {
-          router.push('/admin-dashboard/analytics');
-        } else {
-          router.push('/dashboard');
-        }
+      login(response.user.firstname, response.user.isAdmin, response.user.id);
+      if (response.user.isAdmin) {
+        router.push('/admin-dashboard/analytics');
       } else {
-        setError(response.error || 'An error occurred. Please try again.');
+        router.push('/dashboard');
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Login error:', error);
-      setError('An error occurred. Please try again.');
+      setError(error.message || 'An error occurred. Please try again.');
     }
   };
 

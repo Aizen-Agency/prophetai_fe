@@ -9,9 +9,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
-import { Sidebar } from "@/components/Sidebar"
+import { Sidebar } from "@/components/sidebar"
 import { useRouter, useSearchParams } from 'next/navigation'
 import DataService from "@/app/service/DataService"
+import { useLogin } from "@/context/LoginContext"
 
 type Script = {
   id: number
@@ -35,6 +36,8 @@ export default function ScriptsPage() {
   const scriptId = searchParams.get('id')
   const title = searchParams.get('title')
   const content = searchParams.get('content')
+
+  const { userId, username } = useLogin()
 
   useEffect(() => {
     const fetchScripts = async () => {
@@ -105,8 +108,14 @@ export default function ScriptsPage() {
   const saveScript = async () => {
     try {
       setIsSaving(true)
+      
+      if (!userId) {
+        console.error('User not authenticated')
+        return
+      }
+
       await DataService.saveScript({
-        user_id: 1, // Replace with actual user ID
+        user_id: userId,
         title: scripts[selectedScript].title,
         content: scripts[selectedScript].content,
         product_name: scripts[selectedScript].title,
@@ -122,8 +131,14 @@ export default function ScriptsPage() {
   const deleteScript = async () => {
     try {
       setIsDeleting(true)
+      
+      if (!userId) {
+        console.error('User not authenticated')
+        return
+      }
+
       await DataService.deleteScriptById({
-        user_id: 1, // Replace with actual user ID
+        user_id: userId,
         script_id: scripts[selectedScript].id.toString()
       })
       router.push('/generated-scripts')
@@ -175,7 +190,7 @@ export default function ScriptsPage() {
           <span className="sr-only">Go back</span>
         </Button>
         <div className="mb-10">
-          <h1 className="text-3xl font-semibold text-white">Welcome back, Jessie</h1>
+          <h1 className="text-3xl font-semibold text-white">Welcome back, {username || 'User'}</h1>
           <p className="text-white/70 text-lg mt-2">Here are your generated scripts</p>
         </div>
 

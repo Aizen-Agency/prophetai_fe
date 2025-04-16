@@ -51,15 +51,11 @@ export default function SignupForm() {
         password: formData.password,
       })
   
-      const data = await response.json()
-  
-      if (response.ok) {
-        router.push('/login')
-      } else {
-        setError(data.error || 'An error occurred. Please try again.')
-      }
-    } catch (error) {
-      setError('An error occurred. Please try again.')
+      console.log('Signup response:', response)
+      router.push('/login')
+    } catch (error: any) {
+      console.error('Error signing up:', error)
+      setError(error.message || 'An unexpected error occurred. Please try again.')
     }
   }
 
@@ -201,13 +197,17 @@ export default function SignupForm() {
                   </span>
                 </label>
 
-                <Button
-                  type="submit"
-                  className="w-full bg-purple-600 hover:bg-purple-700 text-white py-6"
-                  disabled={!agreed}
-                >
-                  Sign up
-                </Button>
+                <div className="space-y-4">
+                  {error && <p className="text-red-500 text-sm">{error}</p>}
+
+                  <Button
+                    type="submit"
+                    className="w-full bg-purple-600 hover:bg-purple-700 text-white py-6"
+                    disabled={!agreed}
+                  >
+                    Sign up
+                  </Button>
+                </div>
               </div>
             </form>
 

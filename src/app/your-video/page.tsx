@@ -4,7 +4,7 @@ import { useState, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { ArrowLeft, Play } from "lucide-react"
-import { Sidebar } from "@/components/Sidebar"
+import { Sidebar } from "@/components/sidebar"
 import { useRouter } from 'next/navigation'
 import DataService from "@/app/service/DataService"
 
@@ -26,9 +26,14 @@ export default function YourVideosPage() {
       try {
         const userId = 1 // TODO: Replace with actual user ID
         const response = await DataService.getVideosByUserId(userId)
-        setVideos(response)
+        console.log('API Response:', response) // Debug log
+        
+        // Handle case where videos might be nested in the response object
+        const videosData = Array.isArray(response) ? response : response.videos || response.data || []
+        setVideos(videosData)
       } catch (error) {
         console.error('Error fetching videos:', error)
+        setVideos([])
       } finally {
         setLoading(false)
       }
@@ -76,7 +81,7 @@ export default function YourVideosPage() {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {videos.map((video) => (
+            {videos?.map((video) => (
               <Card key={video.id} className="bg-white/10 border-none shadow-lg">
                 <CardHeader>
                   <CardTitle className="text-white">Video #{video.id}</CardTitle>

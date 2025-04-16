@@ -4,23 +4,61 @@ import { api } from './api'
 
 const DataService = {
   // Auth
-  login: (data: { email: string; password: string }) =>
-    api('/login', {
-      method: 'POST',
-      body: JSON.stringify(data),
-    }),
+  login: async (data: { email: string; password: string }) => {
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/login`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      });
+      
+      const responseData = await response.json();
+      
+      if (!response.ok) {
+        throw {
+          status: response.status,
+          message: responseData.message || responseData.error || 'An error occurred during login'
+        };
+      }
+      
+      return responseData;
+    } catch (error) {
+      throw error;
+    }
+  },
 
-  signup: (data: {
+  signup: async (data: {
     firstname: string
     lastname: string
     phoneNo: string
     email: string
     password: string
-  }) =>
-    api('/signup', {
-      method: 'POST',
-      body: JSON.stringify(data),
-    }),
+  }) => {
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/signup`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      });
+      
+      const responseData = await response.json();
+      
+      if (!response.ok) {
+        throw {
+          status: response.status,
+          message: responseData.message || responseData.error || 'An error occurred during signup'
+        };
+      }
+      
+      return responseData;
+    } catch (error) {
+      throw error;
+    }
+  },
 
   // Dashboard
   getInsights: (userId: number) => fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/insights/${userId}`, {

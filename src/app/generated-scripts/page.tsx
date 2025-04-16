@@ -8,9 +8,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import { Sidebar } from "@/components/Sidebar"
+import { Sidebar } from "@/components/sidebar"
 import { useRouter } from 'next/navigation'
 import DataService from "@/app/service/DataService"
+import { useLogin } from "@/context/LoginContext"
 
 type Script = {
   id: number
@@ -26,6 +27,8 @@ export default function DashboardPage() {
   const [isGenerating, setIsGenerating] = useState(false)
   const [sortOption, setSortOption] = useState<"newest" | "oldest" | "az" | "za">("newest")
   const [scripts, setScripts] = useState<Script[]>([])
+
+  const { userId, username } = useLogin()
 
   useEffect(() => {
     // Load scripts from localStorage
@@ -69,6 +72,11 @@ export default function DashboardPage() {
     setIsGenerating(true);
 
     try {
+      if (!userId) {
+        console.error('User not authenticated')
+        return
+      }
+
       // For each selected script, generate a video
       const videoPromises = selectedScripts.map(scriptId => {
         const script = scripts.find(s => s.id === scriptId);
@@ -78,7 +86,7 @@ export default function DashboardPage() {
         }
         
         return DataService.generateVideo({
-          user_id: 1, // TODO: Replace with actual user ID
+          user_id: userId,
           script_id: scriptId
         }).catch(error => {
           console.error(`Error generating video for script ${scriptId}:`, error);
@@ -146,7 +154,7 @@ export default function DashboardPage() {
           <span className="sr-only">Go back</span>
         </Button>
         <div className="mb-10">
-          <h1 className="text-3xl font-semibold text-white">Welcome back, Jessie</h1>
+          <h1 className="text-3xl font-semibold text-white">Welcome back, {username || 'User'}</h1>
           <p className="text-white/70 text-lg mt-2">Here are your liked script ideas</p>
         </div>
 

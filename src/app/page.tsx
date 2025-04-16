@@ -1,17 +1,22 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
 import { useLogin } from "@/context/LoginContext";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 
 export default function Home() {
-  const { isLoggedIn, username } = useLogin();
+  const { isLoggedIn } = useLogin();
   const router = useRouter();
 
   useEffect(() => {
-    router.push("/register");
-  }, [router]);
+    if (!isLoggedIn) {
+      router.push("/register");
+    } else {
+      // If logged in, you can navigate to any page the user needs access to
+      // For example, you could redirect to a dashboard or home page
+      router.push("/dashboard");
+    }
+  }, [isLoggedIn, router]);
 
   return null;
 }

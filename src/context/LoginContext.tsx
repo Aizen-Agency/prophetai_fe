@@ -7,7 +7,8 @@ interface LoginContextProps {
   isLoggedIn: boolean;
   username: string;
   isAdmin: boolean;
-  login: (user: string, isAdmin: boolean) => void;
+  userId: number;
+  login: (user: string, isAdmin: boolean, userId: number) => void;
   logout: () => void;
 }
 
@@ -43,17 +44,31 @@ export const LoginProvider: React.FC<LoginProviderProps> = ({ children }) => {
     return "";
   });
 
+  const [userId, setUserId] = useState<number>(() => {
+    if (typeof window !== 'undefined') {
+      return parseInt(Cookies.get("userId") || "0");
+    }
+    return 0;
+  });
+
   const [isAdmin, setIsAdmin] = useState<boolean>(() => {
     if (typeof window !== 'undefined') {
-      return Cookies.get("isAdmin") === "true";
+      const adminValue = Cookies.get("isAdmin");
+      return adminValue === "true";
     }
     return false;
   });
 
-  const login = (user: string, admin: boolean) => {
+  const login = (user: string, admin: boolean, id: number) => {
+    if (typeof admin !== 'boolean') {
+      console.error('Admin parameter must be a boolean');
+      return;
+    }
+    
     setIsLoggedIn(true);
     setUsername(user);
     setIsAdmin(admin);
+    setUserId(id);
     
     Cookies.set("isLoggedIn", "true", { 
       secure: true,
@@ -65,7 +80,12 @@ export const LoginProvider: React.FC<LoginProviderProps> = ({ children }) => {
       sameSite: 'strict',
       expires: 7
     });
-    Cookies.set("isAdmin", admin.toString(), {
+    Cookies.set("isAdmin", admin ? "true" : "false", {
+      secure: true,
+      sameSite: 'strict',
+      expires: 7
+    });
+    Cookies.set("userId", id.toString(), {
       secure: true,
       sameSite: 'strict',
       expires: 7
@@ -76,13 +96,15 @@ export const LoginProvider: React.FC<LoginProviderProps> = ({ children }) => {
     setIsLoggedIn(false);
     setUsername("");
     setIsAdmin(false);
+    setUserId(0);
     Cookies.remove("isLoggedIn");
     Cookies.remove("username");
     Cookies.remove("isAdmin");
+    Cookies.remove("userId");
   };
 
   return (
-    <LoginContext.Provider value={{ isLoggedIn, username, isAdmin, login, logout }}>
+    <LoginContext.Provider value={{ isLoggedIn, username, isAdmin, userId, login, logout }}>
       {children}
     </LoginContext.Provider>
   );

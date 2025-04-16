@@ -23,9 +23,7 @@ export function AdminSidebar() {
 
   const sidebarItems: SidebarItem[] = [
     { icon: LayoutDashboard, label: "Dashboard", link: "/admin-dashboard/analytics", isActive: pathname === "/admin-dashboard/analytics" },
-    { icon: FileText, label: "All Scripts", link: "/admin/scripts", isActive: pathname === "/admin/scripts" },
     { icon: Video, label: "AI Videos", link: "/admin-dashboard/generated-video-management", isActive: pathname === "/admin-dashboard/generated-video-management" },
-    { icon: Users, label: "User Management", link: "/admin/users", isActive: pathname === "/admin/users" },
   ]
 
   const toggleExpand = (label: string) => {

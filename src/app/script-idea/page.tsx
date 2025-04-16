@@ -5,9 +5,11 @@ import { LayoutDashboard, Plus, X, Twitter, ChevronDown, ChevronUp, ThumbsUp, Th
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Sidebar } from "@/components/Sidebar"
+import { Sidebar } from "@/components/sidebar"  
 import DataService from "@/app/service/DataService"
 import { useRouter } from "next/navigation"
+import { getCookie } from "@/lib/utils"
+import { useLogin } from "@/context/LoginContext"
 
 type Product = {
   id: number
@@ -63,6 +65,7 @@ export default function DashboardPage() {
   const [likedIdeas, setLikedIdeas] = useState<ScriptIdea[]>([])
 
   const router = useRouter()
+  const { userId, username } = useLogin()
 
   const addProduct = () => {
     if (newProduct.name && newProduct.description) {
@@ -212,7 +215,7 @@ export default function DashboardPage() {
       {/* Main Content */}
       <div className="flex-grow p-10 relative z-10 overflow-y-auto">
         <div className="mb-10">
-          <h1 className="text-3xl font-semibold text-white">Welcome back, Jessie</h1>
+          <h1 className="text-3xl font-semibold text-white">Welcome back, {username || 'User'}</h1>
           <p className="text-white/70 text-lg mt-2">Generate scripts for your products</p>
         </div>
 

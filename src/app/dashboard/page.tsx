@@ -1,22 +1,22 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { Sidebar } from "@/components/Sidebar"
+import { Sidebar } from "@/components/sidebar"
 import { DashboardContent } from "./components/dashboard-content"
 import { Background } from "./components/background"
 import { chartColors } from "./data/data"
 import DataService from "../service/DataService"
+import { useLogin } from "@/context/LoginContext"
 
 export default function DashboardPage() {
   const [insights, setInsights] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const { userId, username } = useLogin()
 
   useEffect(() => {
     const fetchInsights = async () => {
       try {
-        // TODO: Replace with actual user ID from auth context
-        const userId = 1
         const response = await DataService.getInsights(userId)
         const data = await response.json()
         setInsights(data.data)
@@ -29,7 +29,7 @@ export default function DashboardPage() {
     }
 
     fetchInsights()
-  }, [])
+  }, [userId])
 
   if (loading) {
     return <div className="min-h-screen text-white flex items-center justify-center">Loading...</div>
@@ -84,7 +84,7 @@ export default function DashboardPage() {
       <Background />
       <Sidebar activeItem="dashboard"/>
       <DashboardContent 
-        userName="Jessie" 
+        userName={username}
         statsData={statsData}
         monthlyData={monthlyData}
         chartColors={chartColors} 
