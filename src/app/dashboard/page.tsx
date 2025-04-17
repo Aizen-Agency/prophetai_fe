@@ -83,12 +83,14 @@ export default function DashboardPage() {
     <div className="min-h-screen text-white flex relative overflow-hidden">
       <Background />
       <Sidebar activeItem="dashboard"/>
-      <DashboardContent 
-        userName={username}
-        statsData={statsData}
-        monthlyData={monthlyData}
-        chartColors={chartColors} 
-      />
+      <div className="flex-grow p-10 relative z-10 overflow-y-auto ml-[150px]">
+        <DashboardContent 
+          userName={username}
+          statsData={statsData}
+          monthlyData={monthlyData}
+          chartColors={chartColors} 
+        />
+      </div>
     </div>
   )
 }

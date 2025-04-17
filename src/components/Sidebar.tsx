@@ -11,8 +11,8 @@ interface SidebarProps {
 
 const sidebarItems = [
   { icon: LayoutDashboard, label: "Dashboard", id: "dashboard", link : 'dashboard' },
+  { icon: Send, label: "Script Generator", id: "script-generator" , link : "script-idea" },
   { icon: FileText, label: "Scripts", id: "scripts" , link : "script-idea" },
-  { icon: Send, label: "Script Generator", id: "script-generator" , link : "script-generator" },
   { icon: Video, label: "Videos", id: "videos" , link : "your-video" },
   { icon: LayoutDashboard, label: "Analytics", id: "analytics", link : 'performance-tracker' },
 
@@ -28,7 +28,7 @@ export function Sidebar({ activeItem = "scripts" }: SidebarProps) {
   };
   
   return (
-    <div className="w-[150px] h-screen bg-[#080f25]/60 py-8 px-4 flex flex-col border-r border-white/10 relative z-10">
+    <div className="w-[150px] h-screen bg-[#080f25]/60 py-8 px-4 flex flex-col border-r border-white/10 fixed left-0 top-0 z-10 overflow-y-auto no-scrollbar">
       <div className="flex flex-col items-center gap-4 mb-16">
         <div className="w-20 h-20 flex items-center justify-center overflow-hidden rounded-full bg-white/10">
           <img

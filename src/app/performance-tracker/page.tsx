@@ -220,7 +220,7 @@ export default function PerformanceAnalytics(): JSX.Element {
       <Sidebar />
 
       {/* Main Content */}
-      <div className="flex-grow p-10 relative z-10 overflow-y-auto">
+      <div className="flex-grow p-10 relative z-10 overflow-y-auto ml-[150px]">
         <div className="mb-10">
           <h1 className="text-3xl font-semibold text-white">Instagram Performance Tracking</h1>
           <p className="text-white/70 text-lg mt-2">
