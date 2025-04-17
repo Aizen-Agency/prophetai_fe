@@ -217,7 +217,7 @@ export default function PerformanceAnalytics(): JSX.Element {
       <div className="absolute inset-0 bg-gradient-to-br from-[#080f25]/80 via-[#1a1c2e]/60 to-[#2d1b3d]/40"></div>
 
       {/* Sidebar Component */}
-      <Sidebar />
+      <Sidebar activeItem="analytics" />
 
       {/* Main Content */}
       <div className="flex-grow p-10 relative z-10 overflow-y-auto ml-[150px]">

@@ -268,7 +268,7 @@ export default function ScriptsPage() {
             {isCopied ? <Check className="mr-2 h-4 w-4" /> : <Copy className="mr-2 h-4 w-4" />}
             {isCopied ? "Copied!" : "Copy Script"}
           </Button>
-          <Button 
+          {/* <Button 
             className="bg-red-600 hover:bg-red-700 text-white" 
             onClick={deleteScript}
             disabled={isDeleting}
@@ -284,7 +284,7 @@ export default function ScriptsPage() {
                 Delete Script
               </>
             )}
-          </Button>
+          </Button> */}
           <div className="flex items-center space-x-2 ml-auto">
             <Switch
               id="lock-script"

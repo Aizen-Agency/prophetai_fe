@@ -10,6 +10,8 @@ import DataService from "@/app/service/DataService"
 import { useRouter } from "next/navigation"
 import { getCookie } from "@/lib/utils"
 import { useLogin } from "@/context/LoginContext"
+import { useAudioRecorder } from '@/lib/audioUtils';
+import { TranscriptionService } from '@/app/service/TranscriptionService';
 
 type Product = {
   id: number
@@ -24,6 +26,7 @@ type ScriptIdea = {
   tweet: string
   isLiked?: boolean
   hasVoice?: boolean
+  transcript?: string
 }
 
 type XChannel = {
@@ -66,6 +69,8 @@ export default function DashboardPage() {
 
   const router = useRouter()
   const { userId, username } = useLogin()
+  const { isRecording, recordingTime: audioRecordingTime, startRecording, stopRecording, updateRecordingTranscript } = useAudioRecorder();
+  const transcriptionService = TranscriptionService.getInstance();
 
   const addProduct = () => {
     if (newProduct.name && newProduct.description) {
@@ -163,15 +168,34 @@ export default function DashboardPage() {
     }
   }
 
-  const toggleRecording = (id: number) => {
+  const toggleRecording = async (id: number) => {
     if (recordingIdea === id) {
-      setRecordingIdea(null)
-      setRecordingTime(0)
-      console.log("Stopped recording for idea", id)
+      // Stop recording
+      const recording = await stopRecording();
+      try {
+        // Transcribe the recording
+        const transcript = await transcriptionService.transcribeAudio(recording);
+        updateRecordingTranscript(recording.id, transcript);
+        
+        // Update the idea with the transcript and automatically like it
+        setScriptIdeas(prevIdeas => 
+          prevIdeas.map(idea => 
+            idea.id === id 
+              ? { ...idea, hasVoice: true, transcript } 
+              : idea
+          )
+        );
+        
+        // Automatically like the idea when recording stops
+        rateIdea(id, "up");
+      } catch (error) {
+        console.error('Error transcribing audio:', error);
+      }
+      setRecordingIdea(null);
     } else {
-      setRecordingIdea(id)
-      setRecordingTime(0)
-      console.log("Started recording for idea", id)
+      // Start recording
+      await startRecording();
+      setRecordingIdea(id);
     }
   }
 
@@ -288,7 +312,7 @@ export default function DashboardPage() {
               </>
             ) : (
               <>
-                <h2 className="text-xl font-semibold mb-4">Products</h2>
+                <h2 className="text-xl font-semibold mb-4">Channels</h2>
                 <Table>
                   <TableHeader>
                     <TableRow>
@@ -442,6 +466,12 @@ Exclude violence and adult content"
                   {expandedIdeas.includes(idea.id) && (
                     <div className="mt-4 p-3 bg-gray-700 rounded-lg">
                       <p className="text-sm text-white mb-4">{idea.tweet}</p>
+                      {idea.transcript && (
+                        <div className="mt-2 p-2 bg-gray-800 rounded">
+                          <p className="text-sm text-white/80">Transcript:</p>
+                          <p className="text-sm text-white">{idea.transcript}</p>
+                        </div>
+                      )}
                       <div className="flex justify-between items-center mt-2">
                         <div className="flex space-x-2">
                           <Button

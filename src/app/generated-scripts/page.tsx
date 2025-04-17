@@ -143,7 +143,7 @@ export default function DashboardPage() {
       <Sidebar activeItem="scripts"/>
 
       {/* Main Content */}
-      <div className="flex-grow p-10 relative z-10 overflow-y-auto">
+      <div className="flex-grow p-10 relative z-10 overflow-y-auto ml-[150px]">
         <Button
           variant="ghost"
           size="icon"
