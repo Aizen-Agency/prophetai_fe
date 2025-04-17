@@ -72,16 +72,64 @@ export default function DashboardPage() {
   const { isRecording, recordingTime: audioRecordingTime, startRecording, stopRecording, updateRecordingTranscript } = useAudioRecorder();
   const transcriptionService = TranscriptionService.getInstance();
 
-  const addProduct = () => {
-    if (newProduct.name && newProduct.description) {
-      setProducts([...products, { ...newProduct, id: products.length + 1 }])
-      setNewProduct({ name: "", description: "", link: "" })
-    }
-  }
+  useEffect(() => {
+    const fetchChannels = async () => {
+      const userId = parseInt(getCookie('userId') || '0');
+      console.log("userId in useEffect", userId)
+      if (userId) {
+        try {
+          const response = await DataService.getChannels(userId);
+          if (response) {
+            console.log("response", response)
+            setProducts(response.channels.map((channel: any) => ({
+              id: channel.id,
+              name: channel.product_name,
+              description: channel.description || '',
+              link: channel.link || '',
+            })));
+          }
+        } catch (error) {
+          console.error('Error fetching channels:', error);
+        }
+      }
+    };
+    fetchChannels();
+  }, []);
 
-  const removeProduct = (id: number) => {
-    setProducts(products.filter((product) => product.id !== id))
-  }
+  const addProduct = async () => {
+    if (newProduct.name && newProduct.description) {
+      try {
+        const response = await DataService.addChannel({
+          user_id: userId,
+          product_id: products.length + 1,
+          product_name: newProduct.name,
+          description: newProduct.description,
+          link: newProduct.link,
+        });
+
+        if (response.channel) {
+          setProducts([...products, {
+            id: response.channel.id,
+            name: response.channel.product_name,
+            description: response.channel.description || '',
+            link: response.channel.link || '',
+          }]);
+          setNewProduct({ name: '', description: '', link: '' });
+        }
+      } catch (error) {
+        console.error('Error adding product:', error);
+      }
+    }
+  };
+
+  const removeProduct = async (id: number) => {
+    try {
+      await DataService.deleteChannel(id);
+      setProducts(products.filter((product) => product.id !== id));
+    } catch (error) {
+      console.error('Error removing product:', error);
+    }
+  };
 
   const addXChannel = () => {
     if (newXChannel.name && newXChannel.url) {

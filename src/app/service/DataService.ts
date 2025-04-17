@@ -236,7 +236,78 @@ const DataService = {
       console.error('Error fetching all videos:', error);
       throw error;
     }
-  }
+  },
+
+  // Channels
+  async addChannel(data: {
+    user_id: number;
+    product_id: number;
+    product_name: string;
+    link?: string;
+    description?: string;
+  }) {
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/channels`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to add channel');
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Error adding channel:', error);
+      throw error;
+    }
+  },
+
+  async getChannels(userId: number) {
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/channels/${userId}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to fetch channels');
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Error fetching channels:', error);
+      throw error;
+    }
+  },
+
+  async deleteChannel(channelId: number) {
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/channels/${channelId}`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to delete channel');
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Error deleting channel:', error);
+      throw error;
+    }
+  },
 }
 
 export default DataService
