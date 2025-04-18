@@ -154,7 +154,7 @@ export default function DashboardPage() {
       const response = await DataService.generateScriptIdeas({
         product_name: products[0].name,
         description: products[0].description,
-        link: products[0].link || "",
+        link: products[0]?.link || "",
         script_idea: textFilter,
       })
 
