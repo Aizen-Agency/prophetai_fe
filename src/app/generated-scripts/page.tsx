@@ -12,6 +12,7 @@ import { Sidebar } from "@/components/Sidebar"
 import { useRouter } from 'next/navigation'
 import DataService from "@/app/service/DataService"
 import { useLogin } from "@/context/LoginContext"
+import LogoutButton from "@/components/LogoutButton"
 
 type Script = {
   id: number
@@ -144,6 +145,7 @@ export default function DashboardPage() {
 
       {/* Main Content */}
       <div className="flex-grow p-10 relative z-10 overflow-y-auto ml-[150px]">
+        <LogoutButton />
         <Button
           variant="ghost"
           size="icon"

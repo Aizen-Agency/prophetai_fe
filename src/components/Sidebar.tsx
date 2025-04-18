@@ -11,8 +11,8 @@ interface SidebarProps {
 
 const sidebarItems = [
   { icon: LayoutDashboard, label: "Dashboard", id: "dashboard", link : 'dashboard' },
-  { icon: Send, label: "Script Generator", id: "scripts" , link : "script-idea" },
-  { icon: FileText, label: "Scripts", id: "all-scripts" , link : "script-idea" },
+  { icon: FileText, label: "Script Generator", id: "scripts" , link : "script-idea" },
+  // { icon: FileText, label: "Scripts", id: "all-scripts" , link : "script-idea" },
   { icon: Video, label: "Videos", id: "videos" , link : "your-video" },
   { icon: LayoutDashboard, label: "Analytics", id: "analytics", link : 'performance-tracker' },
 

@@ -10,6 +10,7 @@ import DataService from "@/app/service/DataService"
 import { Download , Search} from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import LogoutButton from "@/components/LogoutButton"
 
 interface Video {
   id: number
@@ -73,6 +74,7 @@ export default function YourVideosPage() {
 
       {/* Main Content */}
       <div className="flex-grow p-10 relative z-10 overflow-y-auto ml-[150px]">
+        <LogoutButton />
         <Button
           variant="ghost"
           size="icon"

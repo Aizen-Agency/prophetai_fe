@@ -7,6 +7,7 @@ import { Background } from "./component/background"
 import { chartColors } from "./data/data"
 import DataService from "../service/DataService"
 import { useLogin } from "@/context/LoginContext"
+import LogoutButton from "@/components/LogoutButton"
 
 export default function DashboardPage() {
   const [insights, setInsights] = useState<any>(null)
@@ -84,6 +85,7 @@ export default function DashboardPage() {
       <Background />
       <Sidebar activeItem="dashboard"/>
       <div className="flex-grow p-10 relative z-10 overflow-y-auto ml-[150px]">
+        <LogoutButton />
         <DashboardContent 
           userName={username}
           statsData={statsData}

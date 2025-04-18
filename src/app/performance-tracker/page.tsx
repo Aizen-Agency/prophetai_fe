@@ -24,6 +24,7 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RechartsToolti
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Sidebar } from "@/components/Sidebar"
 import type { User , InstagramVideo, DailyView, InstagramSummary, ChartDataPoint } from "./types"
+import LogoutButton from "@/components/LogoutButton"
 // Sample user data
 const users = { id: 1, name: "Alice Johnson", username: "alice_j", avatar: "/placeholder.svg?height=64&width=64" }
  
@@ -221,6 +222,7 @@ export default function PerformanceAnalytics(): JSX.Element {
 
       {/* Main Content */}
       <div className="flex-grow p-10 relative z-10 overflow-y-auto ml-[150px]">
+        <LogoutButton />
         <div className="mb-10">
           <h1 className="text-3xl font-semibold text-white">Instagram Performance Tracking</h1>
           <p className="text-white/70 text-lg mt-2">

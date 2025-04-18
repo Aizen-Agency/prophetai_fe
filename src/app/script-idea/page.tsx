@@ -12,6 +12,7 @@ import { getCookie } from "@/lib/utils"
 import { useLogin } from "@/context/LoginContext"
 import { useAudioRecorder } from '@/lib/audioUtils';
 import { TranscriptionService } from '@/app/service/TranscriptionService';
+import LogoutButton from "@/components/LogoutButton"
 
 type Product = {
   id: number
@@ -104,7 +105,7 @@ export default function DashboardPage() {
           product_id: products.length + 1,
           product_name: newProduct.name,
           description: newProduct.description,
-          link: newProduct.link,
+          link: newProduct.link || '',
         });
 
         if (response.channel) {
@@ -286,6 +287,7 @@ export default function DashboardPage() {
 
       {/* Main Content */}
       <div className="flex-grow p-10 relative z-10 overflow-y-auto ml-[150px]">
+        <LogoutButton />
         <div className="mb-10">
           <h1 className="text-3xl font-semibold text-white">Welcome back, {username || 'User'}</h1>
           <p className="text-white/70 text-lg mt-2">Generate scripts for your products</p>
