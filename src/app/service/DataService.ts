@@ -101,7 +101,7 @@ const DataService = {
     script_idea: string
   }) => {
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/generate-multiple-idea`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/generate-scripts`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
