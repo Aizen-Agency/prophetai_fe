@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState, useMemo } from "react"
+import React, { useState, useMemo, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import {
   Instagram,
@@ -25,6 +25,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Sidebar } from "@/components/Sidebar"
 import type { User , InstagramVideo, DailyView, InstagramSummary, ChartDataPoint } from "./types"
 import LogoutButton from "@/components/LogoutButton"
+import DataService from "@/app/service/DataService"
 // Sample user data
 const users = { id: 1, name: "Alice Johnson", username: "alice_j", avatar: "/placeholder.svg?height=64&width=64" }
  
@@ -138,21 +139,55 @@ export default function PerformanceAnalytics(): JSX.Element {
   const [performanceFilter, setPerformanceFilter] = useState<string>("all")
   const [sortBy, setSortBy] = useState<string>("views")
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc")
+  const [instagramData, setInstagramData] = useState<InstagramVideo[]>([])
+  const [instagramSummary, setInstagramSummary] = useState<InstagramSummary>({
+    totalViews: 0,
+    totalLikes: 0,
+    totalComments: 0,
+    totalShares: 0,
+  })
   const itemsPerPage = 10
 
-  // Generate Instagram data for the selected user
-  const instagramData = useMemo<InstagramVideo[]>(() => generateInstagramData(100, selectedUser.id), [selectedUser.id])
+  // Fetch Instagram data when component mounts
+  useEffect(() => {
+    const fetchInstagramData = async () => {
+      setIsLoading(true)
+      try {
+        const response = await DataService.getInstagramAnalytics('https://www.instagram.com/nike/')
+        const posts = response.posts || []
+        
+        // Transform the API response into InstagramVideo format
+        const transformedData = posts.map((post: any, index: number) => ({
+          id: index + 1,
+          userId: selectedUser.id,
+          title: post.video,
+          views: post.views,
+          likes: post.likes,
+          comments: post.comments,
+          shares: post.shares,
+          dailyViews: generateDailyViews(14),
+          averageViewsPerDay: post.avg_views_per_day,
+          weekOverWeekGrowth: calculateWeekOverWeekGrowth(generateDailyViews(14)),
+          performance: post.avg_views_per_day > 800 ? "high" : post.avg_views_per_day > 400 ? "medium" : "low",
+          date: new Date(post.date),
+        }))
 
-  // Calculate summary stats for the selected user
-  const instagramSummary = useMemo<InstagramSummary>(
-    () => ({
-      totalViews: instagramData.reduce((sum, item) => sum + item.views, 0),
-      totalLikes: instagramData.reduce((sum, item) => sum + item.likes, 0),
-      totalComments: instagramData.reduce((sum, item) => sum + item.comments, 0),
-      totalShares: instagramData.reduce((sum, item) => sum + item.shares, 0),
-    }),
-    [instagramData],
-  )
+        setInstagramData(transformedData)
+        setInstagramSummary({
+          totalViews: response.total_views,
+          totalLikes: response.total_likes,
+          totalComments: response.total_comments,
+          totalShares: response.total_shares,
+        })
+      } catch (error) {
+        console.error('Error fetching Instagram data:', error)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    fetchInstagramData()
+  }, [selectedUser.id])
 
   // Filter and sort videos
   const filteredAndSortedVideos = useMemo<InstagramVideo[]>(() => {

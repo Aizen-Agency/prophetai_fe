@@ -308,6 +308,51 @@ const DataService = {
       throw error;
     }
   },
+
+  // Instagram Analytics
+  async getInstagramAnalytics(profileUrl: string) {
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/instagram-analytics`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ profile_url: profileUrl }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to get Instagram analytics');
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Error getting Instagram analytics:', error);
+      throw error;
+    }
+  },
+
+  async calculateInstagramAnalytics(posts: any[]) {
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/calculate-analytics`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ posts }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to calculate analytics');
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Error calculating Instagram analytics:', error);
+      throw error;
+    }
+  },
 }
 
 export default DataService
