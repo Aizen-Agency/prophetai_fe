@@ -267,8 +267,21 @@ export default function DashboardPage() {
   }
 
   const handleNext = () => {
-    // Store liked ideas in localStorage
-    localStorage.setItem('generatedScripts', JSON.stringify(likedIdeas))
+    // Format the liked ideas to match the expected structure in generated-scripts
+    const formattedScripts = likedIdeas.map(idea => ({
+      id: idea.id,
+      idea_id: idea.id.toString(), // Using the idea's ID as the idea_id
+      idea_title: idea.topic,
+      script_title: idea.topic,
+      content: idea.tweet,
+      is_locked: false,
+      isLiked: true,
+      hasVoice: idea.hasVoice || false
+    }))
+
+    // Store formatted scripts in localStorage
+    localStorage.setItem('generatedScripts', JSON.stringify(formattedScripts))
+    
     // Navigate to generated-scripts page
     router.push('/generated-scripts')
   }

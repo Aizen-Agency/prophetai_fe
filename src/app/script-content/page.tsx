@@ -17,8 +17,11 @@ import LogoutButton from "@/components/LogoutButton"
 
 type Script = {
   id: number
-  title: string
+  idea_id: string
+  idea_title: string
+  script_title: string
   content: string
+  is_locked: boolean
   date: string
 }
 
@@ -42,10 +45,27 @@ export default function ScriptsPage() {
 
   useEffect(() => {
     const fetchScripts = async () => {
-      if (!title || !content) return
+      if (!title || !content || !userId) return
 
       try {
         setIsLoading(true)
+        
+        // First try to get saved script
+        let savedScript = null
+        try {
+          const savedResponse = await DataService.getScript({
+            user_id: userId,
+            idea_id: scriptId || ''
+          })
+          if (savedResponse.saved_script) {
+            savedScript = savedResponse.saved_script
+            setIsLocked(savedScript.is_locked)
+          }
+        } catch (error) {
+          console.error("Error fetching saved script:", error)
+        }
+
+        // Generate new scripts
         const response = await DataService.generateMultipleIdeas({
           product_name: title,
           description: content,
@@ -55,16 +75,40 @@ export default function ScriptsPage() {
 
         if (response && response.scripts) {
           const scriptsMap: Record<string, Script> = {}
+          
+          // Add saved script as first script if it exists
+          if (savedScript) {
+            scriptsMap['saved'] = {
+              id: savedScript.id,
+              idea_id: savedScript.idea_id,
+              idea_title: savedScript.idea_title,
+              script_title: savedScript.script_title,
+              content: savedScript.script_content,
+              is_locked: savedScript.is_locked,
+              date: savedScript.date
+            }
+          }
+
+          // Add new generated scripts
           response.scripts.forEach((script: any) => {
             scriptsMap[script.id] = {
               id: script.id,
-              title: script.title,
+              idea_id: response.idea_id,
+              idea_title: response.idea_title,
+              script_title: script.title,
               content: script.content,
+              is_locked: false,
               date: script.date
             }
           })
+
           setScripts(scriptsMap)
-          setSelectedScript("copy1")
+          setSelectedScript(savedScript ? 'saved' : 'copy1')
+
+          // Save to localStorage
+          const storedScripts = JSON.parse(localStorage.getItem('generatedScripts') || '[]')
+          const newScripts = Object.values(scriptsMap)
+          localStorage.setItem('generatedScripts', JSON.stringify([...storedScripts, ...newScripts]))
         }
       } catch (error) {
         console.error("Error fetching scripts:", error)
@@ -74,7 +118,7 @@ export default function ScriptsPage() {
     }
 
     fetchScripts()
-  }, [title, content])
+  }, [title, content, userId, scriptId])
 
   const copyToClipboard = async () => {
     try {
@@ -115,13 +159,28 @@ export default function ScriptsPage() {
         return
       }
 
+      const scriptToSave = scripts[selectedScript]
       await DataService.saveScript({
         user_id: userId,
-        title: scripts[selectedScript].title,
-        content: scripts[selectedScript].content,
-        product_name: scripts[selectedScript].title,
+        idea_id: scriptToSave.idea_id,
+        idea_title: scriptToSave.idea_title,
+        script_title: scriptToSave.script_title,
+        script_content: scriptToSave.content,
         is_locked: isLocked
       })
+
+      // Update localStorage
+      const storedScripts = JSON.parse(localStorage.getItem('generatedScripts') || '[]')
+      const updatedScripts = storedScripts.map((script: Script) => {
+        if (script.id === scriptToSave.id) {
+          return {
+            ...script,
+            is_locked: isLocked
+          }
+        }
+        return script
+      })
+      localStorage.setItem('generatedScripts', JSON.stringify(updatedScripts))
     } catch (error) {
       console.error('Error saving script:', error)
     } finally {
@@ -204,7 +263,7 @@ export default function ScriptsPage() {
               className={`bg-[#151F38] border-none ${selectedScript === id ? "ring-2 ring-purple-500" : ""}`}
             >
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium text-white">{script.title}</CardTitle>
+                <CardTitle className="text-sm font-medium text-white">{script.script_title}</CardTitle>
                 <RadioGroup value={selectedScript} onValueChange={handleScriptChange}>
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value={id} id={id} className="border-white text-white" />
@@ -227,7 +286,7 @@ export default function ScriptsPage() {
         {selectedScript && scripts[selectedScript] && (
           <Card className="bg-[#151F38] border-none mb-6">
             <CardHeader>
-              <CardTitle className="text-white">{scripts[selectedScript].title}</CardTitle>
+              <CardTitle className="text-white">{scripts[selectedScript].script_title}</CardTitle>
             </CardHeader>
             <CardContent>
               {isEditing ? (
@@ -304,3 +363,4 @@ export default function ScriptsPage() {
     </div>
   )
 }
+

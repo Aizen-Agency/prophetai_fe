@@ -26,6 +26,7 @@ import { Sidebar } from "@/components/Sidebar"
 import type { User , InstagramVideo, DailyView, InstagramSummary, ChartDataPoint } from "./types"
 import LogoutButton from "@/components/LogoutButton"
 import DataService from "@/app/service/DataService"
+import { useInstagramScraper } from '@/context/InstagramScraperContext';
 // Sample user data
 const users = { id: 1, name: "Alice Johnson", username: "alice_j", avatar: "/placeholder.svg?height=64&width=64" }
  
@@ -147,17 +148,33 @@ export default function PerformanceAnalytics(): JSX.Element {
     totalShares: 0,
   })
   const itemsPerPage = 10
+  const { scrapeInstagram, loading, error } = useInstagramScraper();
 
   // Fetch Instagram data when component mounts
   useEffect(() => {
     const fetchInstagramData = async () => {
+      console.log('Starting to fetch Instagram data');
       setIsLoading(true)
       try {
-        const response = await DataService.getInstagramAnalytics('https://www.instagram.com/nike/')
-        const posts = response.posts || []
+        const response = await DataService.getInstagramAnalytics()
+        console.log('Received Instagram analytics response:', response);
         
+        const instagram_ID = response.instagram_url || []
+        console.log('Instagram IDs to scrape:', instagram_ID);
+        
+        if (!instagram_ID || instagram_ID.length === 0) {
+          throw new Error('No Instagram profiles found to scrape');
+        }
+
         // Transform the API response into InstagramVideo format
-        const transformedData = posts.map((post: any, index: number) => ({
+        const result = await scrapeInstagram(instagram_ID)
+        console.log('Scraped Instagram result:', result);
+
+        if (!result) {
+          throw new Error('Failed to scrape Instagram data');
+        }
+
+        const formattedData: InstagramVideo[] = result.posts.map((post, index) => ({
           id: index + 1,
           userId: selectedUser.id,
           title: post.video,
@@ -165,39 +182,42 @@ export default function PerformanceAnalytics(): JSX.Element {
           likes: post.likes,
           comments: post.comments,
           shares: post.shares,
-          dailyViews: generateDailyViews(14),
+          dailyViews: generateDailyViews(14), // Generate sample daily views
           averageViewsPerDay: post.avg_views_per_day,
           weekOverWeekGrowth: calculateWeekOverWeekGrowth(generateDailyViews(14)),
           performance: post.avg_views_per_day > 800 ? "high" : post.avg_views_per_day > 400 ? "medium" : "low",
           date: new Date(post.date),
-        }))
+        }));
 
-        setInstagramData(transformedData)
+        console.log('Formatted Instagram data:', formattedData);
+
+        setInstagramData(formattedData)
         setInstagramSummary({
-          totalViews: response.total_views,
-          totalLikes: response.total_likes,
-          totalComments: response.total_comments,
-          totalShares: response.total_shares,
+          totalViews: result.total_views,
+          totalLikes: result.total_likes,
+          totalComments: result.total_comments,
+          totalShares: result.total_shares,
         })
       } catch (error) {
         console.error('Error fetching Instagram data:', error)
+        // You might want to show an error message to the user here
       } finally {
         setIsLoading(false)
       }
     }
 
     fetchInstagramData()
-  }, [selectedUser.id])
+  }, [selectedUser.id, scrapeInstagram])
 
   // Filter and sort videos
   const filteredAndSortedVideos = useMemo<InstagramVideo[]>(() => {
-    const result = instagramData.filter(
+    const result = instagramData?.filter(
       (video) =>
         video.title.toLowerCase().includes(searchQuery.toLowerCase()) &&
         (performanceFilter === "all" || video.performance === performanceFilter),
     )
 
-    result.sort((a, b) => {
+    result?.sort((a, b) => {
       if (sortBy === "date") {
         return sortOrder === "asc" ? a.date.getTime() - b.date.getTime() : b.date.getTime() - a.date.getTime()
       } else {
@@ -217,9 +237,9 @@ export default function PerformanceAnalytics(): JSX.Element {
 
   const indexOfLastItem = currentPage * itemsPerPage
   const indexOfFirstItem = indexOfLastItem - itemsPerPage
-  const currentItems = filteredAndSortedVideos.slice(indexOfFirstItem, indexOfLastItem)
+  const currentItems = filteredAndSortedVideos?.slice(indexOfFirstItem, indexOfLastItem)
 
-  const totalPages = Math.ceil(filteredAndSortedVideos.length / itemsPerPage)
+  const totalPages = Math.ceil(filteredAndSortedVideos?.length || 0 / itemsPerPage)
 
   const nextPage = (): void => {
     setCurrentPage((prev) => Math.min(prev + 1, totalPages))
@@ -264,6 +284,12 @@ export default function PerformanceAnalytics(): JSX.Element {
             Monitoring your video engagement and growth on Instagram.
           </p>
         </div>
+
+        {error && (
+          <div className="mb-4 p-4 bg-red-500/20 border border-red-500 rounded-lg">
+            <p className="text-red-500">Error: {error}</p>
+          </div>
+        )}
 
         {/* Instagram Summary Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
@@ -439,7 +465,7 @@ export default function PerformanceAnalytics(): JSX.Element {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {currentItems.map((row, index) => (
+                  {currentItems?.map((row, index) => (
                     <React.Fragment key={row.id}>
                       <TableRow
                         className={`hover:bg-white/5 transition-colors cursor-pointer border border-white/10 ${
@@ -490,8 +516,8 @@ export default function PerformanceAnalytics(): JSX.Element {
             {/* Pagination Controls */}
             <div className="flex items-center justify-between mt-4">
               <div className="text-sm text-white">
-                Showing {indexOfFirstItem + 1} to {Math.min(indexOfLastItem, filteredAndSortedVideos.length)} of{" "}
-                {filteredAndSortedVideos.length} videos
+                Showing {indexOfFirstItem + 1} to {Math.min(indexOfLastItem, filteredAndSortedVideos?.length)} of{" "}
+                {filteredAndSortedVideos?.length} videos
               </div>
               <div className="flex space-x-2">
                 <Button

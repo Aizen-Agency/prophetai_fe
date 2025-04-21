@@ -16,8 +16,11 @@ import LogoutButton from "@/components/LogoutButton"
 
 type Script = {
   id: number
-  title: string
+  idea_id: string
+  idea_title: string
+  script_title: string
   content: string
+  is_locked: boolean
   isLiked: boolean
   hasVoice: boolean
 }
@@ -38,8 +41,11 @@ export default function DashboardPage() {
       const parsedScripts = JSON.parse(storedScripts)
       setScripts(parsedScripts.map((script: any) => ({
         id: script.id,
-        title: script.topic,
-        content: script.tweet,
+        idea_id: script.idea_id,
+        idea_title: script.topic,
+        script_title: script.script_title,
+        content: script.content,
+        is_locked: script.is_locked,
         isLiked: script.isLiked,
         hasVoice: script.hasVoice
       })))
@@ -123,9 +129,9 @@ export default function DashboardPage() {
       case "oldest":
         return a.id - b.id
       case "az":
-        return a.title.localeCompare(b.title)
+        return a.script_title.localeCompare(b.script_title)
       case "za":
-        return b.title.localeCompare(a.title)
+        return b.script_title.localeCompare(a.script_title)
       default:
         return 0
     }
@@ -240,15 +246,15 @@ export default function DashboardPage() {
                 <CardTitle 
                   className="text-white text-lg cursor-pointer"
                   onClick={() => {
-                    router.push(`/script-content?id=${script.id}&title=${encodeURIComponent(script.title)}&content=${encodeURIComponent(script.content)}`)
+                    router.push(`/script-content?id=${script.id}&title=${encodeURIComponent(script.script_title)}&content=${encodeURIComponent(script.content)}`)
                   }}
                 >
-                  {script.title}
+                  {script.script_title}
                 </CardTitle>
               </CardHeader>
               <CardContent
                 onClick={() => {
-                  router.push(`/script-content?id=${script.id}&title=${encodeURIComponent(script.title)}&content=${encodeURIComponent(script.content)}`)
+                  router.push(`/script-content?id=${script.id}&title=${encodeURIComponent(script.script_title)}&content=${encodeURIComponent(script.content)}`)
                 }}
               >
                 <p className="text-white/70 text-sm line-clamp-3 mb-2">
