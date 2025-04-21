@@ -122,9 +122,10 @@ const DataService = {
 
   async saveScript(data: {
     user_id: number;
-    title: string;
-    content: string;
-    product_name: string;
+    idea_id: string;
+    idea_title: string;
+    script_title: string;
+    script_content: string;
     is_locked: boolean;
   }) {
     try {
@@ -310,24 +311,22 @@ const DataService = {
   },
 
   // Instagram Analytics
-  async getInstagramAnalytics(profileUrl: string) {
+  async getInstagramAnalytics() {
     try {
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/instagram-analytics`, {
-        method: 'POST',
+        method: 'GET',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ profile_url: profileUrl }),
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to get Instagram analytics');
+        throw new Error('Failed to get Instagram details');
       }
 
       return await response.json();
     } catch (error) {
-      console.error('Error getting Instagram analytics:', error);
+      console.error('Error getting Instagram details:', error);
       throw error;
     }
   },
@@ -350,6 +349,30 @@ const DataService = {
       return await response.json();
     } catch (error) {
       console.error('Error calculating Instagram analytics:', error);
+      throw error;
+    }
+  },
+
+  async getScript(data: {
+    user_id: number;
+    idea_id: string;
+  }) {
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/get-script`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch script');
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Error fetching script:', error);
       throw error;
     }
   },

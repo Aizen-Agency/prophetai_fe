@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import localFont from "next/font/local";
 import "./globals.css";
 import { LoginProvider } from "@/context/LoginContext";
+import { InstagramScraperProvider } from "@/context/InstagramScraperContext";
 import { ClientOnly } from "@/components/ClientOnly";
 
 const geistSans = localFont({
@@ -31,7 +32,9 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <LoginProvider>
-          <ClientOnly>{children}</ClientOnly>
+          <InstagramScraperProvider>
+            <ClientOnly>{children}</ClientOnly>
+          </InstagramScraperProvider>
         </LoginProvider>
       </body>
     </html>
