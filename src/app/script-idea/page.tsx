@@ -13,6 +13,7 @@ import { useLogin } from "@/context/LoginContext"
 import { useAudioRecorder } from '@/lib/audioUtils';
 import { TranscriptionService } from '@/app/service/TranscriptionService';
 import LogoutButton from "@/components/LogoutButton"
+import { v4 as uuidv4 } from 'uuid'
 
 type Product = {
   id: number
@@ -270,7 +271,7 @@ export default function DashboardPage() {
     // Format the liked ideas to match the expected structure in generated-scripts
     const formattedScripts = likedIdeas.map(idea => ({
       id: idea.id,
-      idea_id: idea.id.toString(), // Using the idea's ID as the idea_id
+      idea_id: uuidv4(), // Generate a new UUID for each script
       idea_title: idea.topic,
       script_title: idea.topic,
       content: idea.tweet,

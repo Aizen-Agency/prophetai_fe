@@ -53,13 +53,20 @@ export default function ScriptsPage() {
         // First try to get saved script
         let savedScript = null
         try {
-          const savedResponse = await DataService.getScript({
-            user_id: userId,
-            idea_id: scriptId || ''
-          })
-          if (savedResponse.saved_script) {
-            savedScript = savedResponse.saved_script
-            setIsLocked(savedScript.is_locked)
+          // Get idea_id from localStorage
+          const storedScripts = JSON.parse(localStorage.getItem('generatedScripts') || '[]')
+          const currentScript = storedScripts.find((script: any) => script.id === parseInt(scriptId || '0'))
+          const idea_id = currentScript?.idea_id
+
+          if (idea_id) {
+            const savedResponse = await DataService.getScript({
+              user_id: userId,
+              idea_id: idea_id
+            })
+            if (savedResponse.saved_script) {
+              savedScript = savedResponse.saved_script
+              setIsLocked(savedScript.is_locked)
+            }
           }
         } catch (error) {
           console.error("Error fetching saved script:", error)
@@ -104,11 +111,6 @@ export default function ScriptsPage() {
 
           setScripts(scriptsMap)
           setSelectedScript(savedScript ? 'saved' : 'copy1')
-
-          // Save to localStorage
-          const storedScripts = JSON.parse(localStorage.getItem('generatedScripts') || '[]')
-          const newScripts = Object.values(scriptsMap)
-          localStorage.setItem('generatedScripts', JSON.stringify([...storedScripts, ...newScripts]))
         }
       } catch (error) {
         console.error("Error fetching scripts:", error)
@@ -159,20 +161,32 @@ export default function ScriptsPage() {
         return
       }
 
+      // Get the current script's idea_id from localStorage
+      const storedScripts = JSON.parse(localStorage.getItem('generatedScripts') || '[]')
+      const currentScript = storedScripts.find((script: any) => script.id === parseInt(scriptId || '0'))
+      const idea_id = currentScript?.idea_id
+      const idea_title = currentScript?.idea_title
+      const script_title = currentScript?.script_title
+      const script_content = currentScript?.content
+
+      if (!idea_id) {
+        console.error('No idea_id found for the current script')
+        return
+      }
+
       const scriptToSave = scripts[selectedScript]
       await DataService.saveScript({
         user_id: userId,
-        idea_id: scriptToSave.idea_id,
-        idea_title: scriptToSave.idea_title,
-        script_title: scriptToSave.script_title,
-        script_content: scriptToSave.content,
+        idea_id: idea_id,
+        idea_title: idea_title,
+        script_title: script_title,
+        script_content: script_content,
         is_locked: isLocked
       })
 
       // Update localStorage
-      const storedScripts = JSON.parse(localStorage.getItem('generatedScripts') || '[]')
-      const updatedScripts = storedScripts.map((script: Script) => {
-        if (script.id === scriptToSave.id) {
+      const updatedScripts = storedScripts.map((script: any) => {
+        if (script.id === parseInt(scriptId || '0')) {
           return {
             ...script,
             is_locked: isLocked
