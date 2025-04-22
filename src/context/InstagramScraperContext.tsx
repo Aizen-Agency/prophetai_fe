@@ -63,7 +63,7 @@ export const InstagramScraperProvider = ({ children }: { children: ReactNode }) 
       };
 
       console.log('Starting Apify actor run with input:', input);
-      const run = await client.actor('apify/instagram-scraper').call(input);
+      const run = await client.actor('apify/instagram-api-scraper').call(input);
       console.log('Apify run completed:', run);
 
       const { items } = await client.dataset(run.defaultDatasetId).listItems();
