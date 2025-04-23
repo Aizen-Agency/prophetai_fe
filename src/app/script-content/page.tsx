@@ -167,7 +167,6 @@ export default function ScriptsPage() {
       const idea_id = currentScript?.idea_id
       const idea_title = currentScript?.idea_title
       const script_title = currentScript?.script_title
-      const script_content = currentScript?.content
 
       if (!idea_id) {
         console.error('No idea_id found for the current script')
@@ -175,21 +174,22 @@ export default function ScriptsPage() {
       }
 
       const scriptToSave = scripts[selectedScript]
-      await DataService.saveScript({
+      const response = await DataService.saveScript({
         user_id: userId,
         idea_id: idea_id,
         idea_title: idea_title,
         script_title: script_title,
-        script_content: script_content,
+        script_content: scripts[selectedScript].content,
         is_locked: isLocked
       })
 
-      // Update localStorage
+      // Update localStorage with the script_id from the response
       const updatedScripts = storedScripts.map((script: any) => {
         if (script.id === parseInt(scriptId || '0')) {
           return {
             ...script,
-            is_locked: isLocked
+            is_locked: isLocked,
+            script_id: response.id // Add the script_id from the response
           }
         }
         return script

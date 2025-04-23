@@ -92,9 +92,15 @@ export default function DashboardPage() {
           return null;
         }
         
+        // Get transcript from localStorage based on idea_id
+        const storedScripts = JSON.parse(localStorage.getItem('generatedScripts') || '[]');
+        const currentScript = storedScripts.find((s: any) => s.id === scriptId);
+        const transcript = currentScript?.transcript || "transcript";
+        
         return DataService.generateVideo({
           user_id: userId,
-          script_id: scriptId
+          script_id: script.idea_id,
+          transcript: transcript
         }).catch(error => {
           console.error(`Error generating video for script ${scriptId}:`, error);
           return null;
