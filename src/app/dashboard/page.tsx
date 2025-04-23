@@ -64,11 +64,6 @@ export default function DashboardPage() {
       value: calculateTotal('videos_generated').toString(),
       change: "+0%"
     },
-    {
-      title: "Videos Posted",
-      value: calculateTotal('videos_posted').toString(),
-      change: "+0%"
-    }
   ]
 
   // Format monthly data for charts

@@ -175,7 +175,8 @@ const DataService = {
   // Video Generation
   async generateVideo(data: {
     user_id: number;
-    script_id: number;
+    script_id: string;
+    transcript:string;
   }) {
     try {
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/generate-video`, {
