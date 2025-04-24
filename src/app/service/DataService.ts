@@ -1,6 +1,7 @@
 // services/DataService.ts
 
 import { api } from './api'
+import { getCookie } from '@/lib/utils'
 
 const DataService = {
   // Auth
@@ -88,17 +89,28 @@ const DataService = {
     description: string
     link: string
     script_idea: string
-  }) =>
-    api('/generate-script-idea', {
+  }) => {
+    const userId = getCookie('userId')
+    if (!userId) {
+      throw new Error('User ID not found in cookies')
+    }
+    
+    return api('/generate-script-idea', {
       method: 'POST',
-      body: JSON.stringify(data),
-    }),
+      body: JSON.stringify({
+        ...data,
+        user_id: parseInt(userId)
+      }),
+    })
+  },
 
   generateMultipleIdeas: async (data: {
-    product_name: string
-    description: string
-    link: string
-    script_idea: string
+    product_name: string;
+    description: string;
+    link: string;
+    script_idea: string;
+    user_id: string;
+    transcript: string;
   }) => {
     try {
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/generate-scripts`, {
@@ -107,16 +119,16 @@ const DataService = {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(data),
-      })
+      });
 
       if (!response.ok) {
-        throw new Error('Failed to generate multiple ideas')
+        throw new Error('Failed to generate multiple ideas');
       }
 
-      return await response.json()
+      return await response.json();
     } catch (error) {
-      console.error('Error generating multiple ideas:', error)
-      throw error
+      console.error('Error generating multiple ideas:', error);
+      throw error;
     }
   },
 
@@ -355,16 +367,24 @@ const DataService = {
   },
 
   async getScript(data: {
-    user_id: number;
+   
     idea_id: string;
-  }) {
+  }) 
+  {
+    const userId = getCookie('userId')
+    if (!userId) {
+      throw new Error('User ID not found in cookies')
+    }
     try {
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/get-script`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(data),
+        body: JSON.stringify({
+          ...data,
+          user_id: parseInt(userId)
+        }),
       });
 
       if (!response.ok) {

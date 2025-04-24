@@ -18,11 +18,25 @@ export default function DashboardPage() {
   useEffect(() => {
     const fetchInsights = async () => {
       try {
+        if (!userId) {
+          setError("User ID not found")
+          setLoading(false)
+          return
+        }
+
         const response = await DataService.getInsights(userId)
+        if (!response.ok) {
+          throw new Error("Failed to fetch insights")
+        }
+        
         const data = await response.json()
+        if (data.error) {
+          throw new Error(data.error)
+        }
+        
         setInsights(data.data)
       } catch (err) {
-        setError("Failed to fetch insights")
+        setError(err instanceof Error ? err.message : "Failed to fetch insights")
         console.error(err)
       } finally {
         setLoading(false)
@@ -40,40 +54,16 @@ export default function DashboardPage() {
     return <div className="min-h-screen text-white flex items-center justify-center">{error}</div>
   }
 
-  // Calculate totals from monthly data
-  const calculateTotal = (metric: string) => {
-    if (!insights?.months) return 0
-    return Object.values(insights.months).reduce((total: number, month: any) => {
-      return total + (month[metric] || 0)
-    }, 0)
-  }
+  // Calculate total values for articles, scripts, and videos
+  const totalArticles = insights.reduce((sum: number, monthData: any) => sum + monthData.articles, 0)
+  const totalScripts = insights.reduce((sum: number, monthData: any) => sum + monthData.scripts, 0)
+  const totalVideos = insights.reduce((sum: number, monthData: any) => sum + monthData.totalVideos, 0)
 
   const statsData = [
-    {
-      title: "Articles Scraped",
-      value: calculateTotal('articles').toString(),
-      change: "+0%"
-    },
-    {
-      title: "Scripts Generated",
-      value: calculateTotal('scripts').toString(),
-      change: "+0%"
-    },
-    {
-      title: "Videos Generated",
-      value: calculateTotal('videos_generated').toString(),
-      change: "+0%"
-    },
+    { title: "Articles scraped", value: totalArticles.toLocaleString(), change: "+0%" },
+    { title: "Scripts generated", value: totalScripts.toLocaleString(), change: "+0%" },
+    { title: "Videos generated", value: totalVideos.toLocaleString(), change: "+0%" }
   ]
-
-  // Format monthly data for charts
-  const monthlyData = insights?.months ? Object.entries(insights.months).map(([month, data]: [string, any]) => ({
-    month: month.charAt(0).toUpperCase() + month.slice(1),
-    articles: data.articles || 0,
-    scripts: data.scripts || 0,
-    videosGenerated: data.videos_generated || 0,
-    videosPosted: data.videos_posted || 0
-  })) : []
 
   return (
     <div className="min-h-screen text-white flex relative overflow-hidden">
@@ -84,7 +74,7 @@ export default function DashboardPage() {
         <DashboardContent 
           userName={username}
           statsData={statsData}
-          monthlyData={monthlyData}
+          monthlyData={insights}
           chartColors={chartColors} 
         />
       </div>
