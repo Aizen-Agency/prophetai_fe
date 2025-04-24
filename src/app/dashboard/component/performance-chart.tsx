@@ -6,8 +6,7 @@ interface PerformanceChartProps {
   colors: {
     articles: string
     scripts: string
-    videosGen: string
-    videosPosted: string
+    videos: string
   }
 }
 
@@ -20,8 +19,7 @@ export function PerformanceChart({ data, colors }: PerformanceChartProps) {
           <div className="text-sm font-normal text-white/70 mt-2">
             <span className="inline-block w-3 h-3 rounded-full bg-[#8B5CF6] mr-2"></span>Articles
             <span className="inline-block w-3 h-3 rounded-full bg-[#3B82F6] mr-2 ml-4"></span>Scripts
-            <span className="inline-block w-3 h-3 rounded-full bg-[#10B981] mr-2 ml-4"></span>Short Videos
-            <span className="inline-block w-3 h-3 rounded-full bg-[#0EA5E9] mr-2 ml-4"></span>Long Videos
+            <span className="inline-block w-3 h-3 rounded-full bg-[#10B981] mr-2 ml-4"></span>Videos
           </div>
         </CardTitle>
       </CardHeader>
@@ -34,8 +32,7 @@ export function PerformanceChart({ data, colors }: PerformanceChartProps) {
             <Tooltip contentStyle={{ backgroundColor: "#151F38", border: "none" }} labelStyle={{ color: "#fff" }} />
             <Line type="monotone" dataKey="articles" stroke={colors.articles} strokeWidth={2} dot={false} />
             <Line type="monotone" dataKey="scripts" stroke={colors.scripts} strokeWidth={2} dot={false} />
-            <Line type="monotone" dataKey="shortVideos" stroke="#10B981" strokeWidth={2} dot={false} />
-            <Line type="monotone" dataKey="longVideos" stroke={colors.videosPosted} strokeWidth={2} dot={false} />
+            <Line type="monotone" dataKey="videos" stroke={colors.videos} strokeWidth={2} dot={false} />
           </LineChart>
         </ResponsiveContainer>
       </CardContent>

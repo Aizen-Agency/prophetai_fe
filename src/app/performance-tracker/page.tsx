@@ -145,10 +145,10 @@ export default function PerformanceAnalytics(): JSX.Element {
     totalViews: 0,
     totalLikes: 0,
     totalComments: 0,
-    totalShares: 0,
+    // totalShares: 0,
   })
   const itemsPerPage = 10
-  const { scrapeInstagram, loading, error } = useInstagramScraper();
+  const { scrapeInstagram, loading, error } = useInstagramScraper(); 
 
   // Fetch Instagram data when component mounts
   useEffect(() => {
@@ -159,55 +159,64 @@ export default function PerformanceAnalytics(): JSX.Element {
         const response = await DataService.getInstagramAnalytics()
         console.log('Received Instagram analytics response:', response);
         
-        const instagram_ID = response.instagram_url || []
-        console.log('Instagram IDs to scrape:', instagram_ID);
+        // If there's no data, show an error
+        if (!response || !response.analytics || response.analytics.length === 0) {
+          throw new Error('No Instagram analytics data available');
+        }
         
-        if (!instagram_ID || instagram_ID.length === 0) {
-          throw new Error('No Instagram profiles found to scrape');
+        // Use the most recent analytics data
+        const latestAnalytics = response.analytics[response.analytics.length - 1];
+        console.log('Latest analytics:', latestAnalytics);
+        
+        // Parse the posts JSON if it's a string
+        let analyticsPosts;
+        if (typeof latestAnalytics.posts === 'string') {
+          analyticsPosts = JSON.parse(latestAnalytics.posts);
+        } else {
+          analyticsPosts = latestAnalytics.posts;
+        }
+        
+        console.log('Parsed analytics posts:', analyticsPosts);
+
+        if (!analyticsPosts || !analyticsPosts.posts) {
+          throw new Error('Invalid analytics data format');
         }
 
         // Transform the API response into InstagramVideo format
-        const result = await scrapeInstagram(instagram_ID)
-        console.log('Scraped Instagram result:', result);
-
-        if (!result) {
-          throw new Error('Failed to scrape Instagram data');
-        }
-
-        const formattedData: InstagramVideo[] = result.posts.map((post, index) => ({
+        const formattedData: InstagramVideo[] = analyticsPosts.posts.map((post: any, index: number) => ({
           id: index + 1,
           userId: selectedUser.id,
-          title: post.video,
-          views: post.views,
-          likes: post.likes,
-          comments: post.comments,
-          shares: post.shares,
-          dailyViews: generateDailyViews(14), // Generate sample daily views
-          averageViewsPerDay: post.avg_views_per_day,
+          title: post.video || `Instagram Post ${index + 1}`,
+          views: post.views || 0,
+          likes: post.likes || 0,
+          comments: post.comments || 0,
+          shares: post.shares || 0,
+          dailyViews: generateDailyViews(14), // Generate sample daily views for now
+          averageViewsPerDay: post.avg_views_per_day || 0,
           weekOverWeekGrowth: calculateWeekOverWeekGrowth(generateDailyViews(14)),
           performance: post.avg_views_per_day > 800 ? "high" : post.avg_views_per_day > 400 ? "medium" : "low",
-          date: new Date(post.date),
+          date: new Date(post.date || Date.now()),
         }));
 
         console.log('Formatted Instagram data:', formattedData);
 
         setInstagramData(formattedData)
         setInstagramSummary({
-          totalViews: result.total_views,
-          totalLikes: result.total_likes,
-          totalComments: result.total_comments,
-          totalShares: result.total_shares,
+          totalViews: analyticsPosts.total_views || 0,
+          totalLikes: analyticsPosts.total_likes || 0,
+          totalComments: analyticsPosts.total_comments || 0,
+          // totalShares: analyticsPosts.total_shares || 0,
         })
       } catch (error) {
         console.error('Error fetching Instagram data:', error)
-        // You might want to show an error message to the user here
+        // Optional: set error state and show to the user
       } finally {
         setIsLoading(false)
       }
     }
 
     fetchInstagramData()
-  }, [selectedUser.id, scrapeInstagram])
+  }, [selectedUser.id])
 
   // Filter and sort videos
   const filteredAndSortedVideos = useMemo<InstagramVideo[]>(() => {
@@ -349,7 +358,7 @@ export default function PerformanceAnalytics(): JSX.Element {
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>
-          <TooltipProvider>
+          {/* <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
                 <Card className="bg-[#151F38] border-0 shadow-lg shadow-black/25 cursor-help">
@@ -366,7 +375,7 @@ export default function PerformanceAnalytics(): JSX.Element {
                 <p>Total number of video shares</p>
               </TooltipContent>
             </Tooltip>
-          </TooltipProvider>
+          </TooltipProvider> */}
         </div>
 
         {/* Trend Chart */}
