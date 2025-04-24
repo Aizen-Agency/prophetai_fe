@@ -60,7 +60,6 @@ export default function ScriptsPage() {
 
           if (idea_id) {
             const savedResponse = await DataService.getScript({
-              user_id: userId,
               idea_id: idea_id
             })
             if (savedResponse.saved_script) {
@@ -73,11 +72,18 @@ export default function ScriptsPage() {
         }
 
         // Generate new scripts
+        const userId = document.cookie.replace(/(?:(?:^|.*;\s*)userId\s*\=\s*([^;]*).*$)|^.*$/, "$1");
+        const storedScripts = JSON.parse(localStorage.getItem('generatedScripts') || '[]');
+        const currentScript = storedScripts.find((script: any) => script.id === parseInt(scriptId || '0'));
+        const transcript = currentScript?.transcript;
+
         const response = await DataService.generateMultipleIdeas({
           product_name: title,
           description: content,
           link: "",
-          script_idea: content
+          script_idea: content,
+          user_id: userId,
+          transcript: transcript
         })
 
         if (response && response.scripts) {

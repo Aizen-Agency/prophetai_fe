@@ -13,7 +13,7 @@ import { useRouter } from 'next/navigation'
 import DataService from "@/app/service/DataService"
 import { useLogin } from "@/context/LoginContext"
 import LogoutButton from "@/components/LogoutButton"
-
+import Cookies from 'js-cookie';
 type Script = {
   id: number
   idea_id: string
@@ -107,6 +107,18 @@ export default function DashboardPage() {
         });
       });
 
+      // Store the first selected script's idea_id in a cookie for later use
+      const firstSelectedScript = scripts.find(s => s.id === selectedScripts[0]);
+      if (firstSelectedScript) {
+        Cookies.set("idea_id", firstSelectedScript.idea_id, {
+          secure: true,
+          sameSite: 'strict', 
+          expires: 7
+        });
+      }
+       
+      
+
       // Wait for all videos to be generated
       const results = await Promise.all(videoPromises.filter(Boolean));
       
@@ -114,8 +126,10 @@ export default function DashboardPage() {
       const successfulGenerations = results.filter(result => result !== null);
       
       if (successfulGenerations.length > 0) {
-        // Navigate to the videos page
-        router.push('/your-video');
+        // Extract the video_id from the first successful generation
+        const videoId = successfulGenerations[0].video_id;
+        // Navigate to the videos page with video_id
+        router.push(`/your-video?video_id=${videoId}`);
       } else {
         console.error('Failed to generate any videos');
         // TODO: Show error toast/notification to user

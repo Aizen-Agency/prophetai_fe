@@ -33,7 +33,7 @@ export interface User {
     totalViews: number
     totalLikes: number
     totalComments: number
-    totalShares: number
+    // totalShares: number
   }
   
   // Chart data point
