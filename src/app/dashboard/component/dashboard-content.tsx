@@ -32,7 +32,14 @@ export function DashboardContent({ userName, statsData, monthlyData, chartColors
       {/* Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2">
-          <PerformanceChart data={monthlyData} colors={chartColors} />
+          <PerformanceChart 
+            data={monthlyData} 
+            colors={{
+              articles: chartColors.articles,
+              scripts: chartColors.scripts,
+              videos: chartColors.videosGen
+            }} 
+          />
         </div>
         <div>
           <VideoGenerationChart data={monthlyData} color={chartColors.videosGen} />
