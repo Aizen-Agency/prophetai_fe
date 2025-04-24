@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { ArrowLeft, Play, Download, Search, Loader, Copy, CheckCircle2, Settings, ChevronDown } from "lucide-react"
@@ -238,6 +238,8 @@ export default function YourVideosPage() {
   const [pendingVideos, setPendingVideos] = useState<PendingVideo[]>([])
   const [copiedId, setCopiedId] = useState<number | null>(null)
   const [proxyUrls, setProxyUrls] = useState<Record<number, string>>({})
+  // Add a ref to track processed video IDs
+  const processedVideoIds = useRef<Set<string>>(new Set())
 
   useEffect(() => {
     const fetchVideos = async () => {
@@ -288,8 +290,15 @@ export default function YourVideosPage() {
           throw new Error('User ID or Script ID not found');
         }
 
-        // Add pending video to state
-        setPendingVideos(prev => [...prev, { videoId, status: 'processing' }]);
+        // Check if video is already in pending state before adding
+        setPendingVideos(prev => {
+          // If video is already in pending list, don't add it again
+          if (prev.some(v => v.videoId === videoId)) {
+            return prev;
+          }
+          // Otherwise add it to pending videos
+          return [...prev, { videoId, status: 'processing' }];
+        });
 
         const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/upload-heygen-video`, {
           method: 'POST',
@@ -358,11 +367,20 @@ export default function YourVideosPage() {
     };
 
     const videoId = new URLSearchParams(window.location.search).get('video_id');
-    if (videoId) {
+    // Only check video status if we haven't processed this video ID before
+    if (videoId && !processedVideoIds.current.has(videoId)) {
+      // Mark this video ID as processed
+      processedVideoIds.current.add(videoId);
       checkVideoStatus(videoId);
     }
 
     fetchVideos();
+    
+    // Clear URL parameter after processing to prevent reprocessing on page refreshes
+    if (videoId) {
+      const newUrl = window.location.pathname;
+      window.history.replaceState({}, document.title, newUrl);
+    }
   }, [router]);
 
   const filteredAndSortedVideos = videos
