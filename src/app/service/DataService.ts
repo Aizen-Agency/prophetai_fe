@@ -212,6 +212,8 @@ const DataService = {
 
   async getVideosByUserId(userId: number) {
     try {
+      console.log(`Fetching videos for user ID: ${userId}`);
+      
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/videos/${userId}`, {
         method: 'GET',
         headers: {
@@ -219,11 +221,47 @@ const DataService = {
         },
       });
 
+      console.log('Video API response status:', response.status);
+      
       if (!response.ok) {
         throw new Error('Failed to fetch videos');
       }
 
-      return await response.json();
+      const data = await response.json();
+      console.log('Raw video data from API:', data);
+      
+      // Ensure all videos have valid URLs
+      if (Array.isArray(data)) {
+        const processedData = data.map((video: any) => {
+          // Look for URL in different possible properties
+          if (!video.video_url && !video.url) {
+            console.warn(`Video ${video.id} has no URL`);
+          }
+          
+          // Normalize video object
+          return {
+            ...video,
+            video_url: video.video_url || video.url || ''
+          };
+        });
+        return processedData;
+      } else if (data.videos && Array.isArray(data.videos)) {
+        const processedData = data.videos.map((video: any) => {
+          // Look for URL in different possible properties
+          if (!video.video_url && !video.url) {
+            console.warn(`Video ${video.id} has no URL`);
+          }
+          
+          // Normalize video object
+          return {
+            ...video,
+            video_url: video.video_url || video.url || ''
+          };
+        });
+        return processedData;
+      }
+      
+      return data;
     } catch (error) {
       console.error('Error fetching videos:', error);
       throw error;
