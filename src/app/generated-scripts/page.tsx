@@ -14,6 +14,16 @@ import DataService from "@/app/service/DataService"
 import { useLogin } from "@/context/LoginContext"
 import LogoutButton from "@/components/LogoutButton"
 import Cookies from 'js-cookie';
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogTitle, 
+  DialogDescription, 
+  DialogFooter, 
+  DialogHeader 
+} from "@/components/ui/dialog"
+import { Input } from "@/components/ui/input"
+
 type Script = {
   id: number
   idea_id: string
@@ -25,12 +35,27 @@ type Script = {
   hasVoice: boolean
 }
 
+type HeyGenSettings = {
+  apiKey: string
+  avatarId: string
+  templateId: string
+  voiceId: string
+}
+
 export default function DashboardPage() {
   const router = useRouter()
   const [selectedScripts, setSelectedScripts] = useState<number[]>([])
   const [isGenerating, setIsGenerating] = useState(false)
   const [sortOption, setSortOption] = useState<"newest" | "oldest" | "az" | "za">("newest")
   const [scripts, setScripts] = useState<Script[]>([])
+  const [isHeyGenDialogOpen, setIsHeyGenDialogOpen] = useState(false)
+  const [heyGenSettings, setHeyGenSettings] = useState<HeyGenSettings>({
+    apiKey: "",
+    avatarId: "",
+    templateId: "",
+    voiceId: ""
+  })
+  const [useDefaultSettings, setUseDefaultSettings] = useState(false)
 
   const { userId, username } = useLogin()
 
@@ -49,6 +74,18 @@ export default function DashboardPage() {
         isLiked: script.isLiked,
         hasVoice: script.hasVoice
       })))
+    }
+
+    // Load previous HeyGen settings from localStorage if available
+    const savedSettings = localStorage.getItem('heyGenSettings')
+    if (savedSettings) {
+      setHeyGenSettings(JSON.parse(savedSettings))
+    }
+    
+    // Load useDefault preference
+    const useDefault = localStorage.getItem('useDefaultHeyGenSettings')
+    if (useDefault) {
+      setUseDefaultSettings(useDefault === 'true')
     }
   }, [])
 
@@ -70,6 +107,30 @@ export default function DashboardPage() {
     }
   }
 
+  const handleHeyGenSettingsChange = (field: keyof HeyGenSettings, value: string) => {
+    setHeyGenSettings(prev => ({
+      ...prev,
+      [field]: value
+    }))
+  }
+
+  const saveHeyGenSettings = () => {
+    localStorage.setItem('heyGenSettings', JSON.stringify(heyGenSettings))
+    localStorage.setItem('useDefaultHeyGenSettings', useDefaultSettings.toString())
+  }
+
+  const toggleUseDefaultSettings = () => {
+    setUseDefaultSettings(prev => !prev)
+  }
+
+  const handleGenerateClick = () => {
+    if (selectedScripts.length === 0) {
+      console.log("No scripts selected")
+      return
+    }
+    setIsHeyGenDialogOpen(true)
+  }
+
   const handleGenerate = async () => {
     if (selectedScripts.length === 0) {
       console.log("No scripts selected");
@@ -77,6 +138,8 @@ export default function DashboardPage() {
     }
 
     setIsGenerating(true);
+    setIsHeyGenDialogOpen(false);
+    saveHeyGenSettings();
 
     try {
       if (!userId) {
@@ -100,7 +163,16 @@ export default function DashboardPage() {
         return DataService.generateVideo({
           user_id: userId,
           script_id: script.idea_id,
-          transcript: transcript
+          transcript: transcript,
+          heygen: useDefaultSettings ? 
+            { useDefault: true } : 
+            {
+              apiKey: heyGenSettings.apiKey,
+              avatarId: heyGenSettings.avatarId,
+              templateId: heyGenSettings.templateId,
+              voiceId: heyGenSettings.voiceId,
+              useDefault: false
+            }
         }).catch(error => {
           console.error(`Error generating video for script ${scriptId}:`, error);
           return null;
@@ -117,8 +189,6 @@ export default function DashboardPage() {
         });
       }
        
-      
-
       // Wait for all videos to be generated
       const results = await Promise.all(videoPromises.filter(Boolean));
       
@@ -224,7 +294,7 @@ export default function DashboardPage() {
             </DropdownMenu>
             <Button
               className="bg-purple-600 hover:bg-purple-700 text-white"
-              onClick={handleGenerate}
+              onClick={handleGenerateClick}
               disabled={selectedScripts.length === 0 || isGenerating}
             >
               {isGenerating ? (
@@ -296,6 +366,94 @@ export default function DashboardPage() {
           ))}
         </div>
       </div>
+
+      {/* HeyGen Settings Dialog */}
+      <Dialog open={isHeyGenDialogOpen} onOpenChange={setIsHeyGenDialogOpen}>
+        <DialogContent className="bg-[#1a1c2e] text-white border-zinc-700">
+          <DialogHeader>
+            <DialogTitle className="text-xl">HeyGen API Settings</DialogTitle>
+            <DialogDescription className="text-zinc-400">
+              Enter your HeyGen API credentials to generate the video
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="flex items-center space-x-2 mb-2">
+            <input
+              type="checkbox"
+              id="useDefault"
+              checked={useDefaultSettings}
+              onChange={toggleUseDefaultSettings}
+              className="rounded text-purple-600 focus:ring-purple-500"
+            />
+            <Label htmlFor="useDefault" className="text-white cursor-pointer">
+              Use default settings (from server)
+            </Label>
+          </div>
+          
+          <div className={`grid gap-4 py-4 ${useDefaultSettings ? 'opacity-50 pointer-events-none' : ''}`}>
+            <div className="grid gap-2">
+              <Label htmlFor="apiKey" className="text-white">API Key</Label>
+              <Input 
+                id="apiKey" 
+                value={heyGenSettings.apiKey}
+                onChange={(e) => handleHeyGenSettingsChange('apiKey', e.target.value)}
+                className="bg-[#2d2d3d] border-zinc-700 text-white"
+                placeholder="Enter your HeyGen API key"
+                disabled={useDefaultSettings}
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="avatarId" className="text-white">Avatar ID</Label>
+              <Input 
+                id="avatarId" 
+                value={heyGenSettings.avatarId}
+                onChange={(e) => handleHeyGenSettingsChange('avatarId', e.target.value)}
+                className="bg-[#2d2d3d] border-zinc-700 text-white"
+                placeholder="Enter your avatar ID"
+                disabled={useDefaultSettings}
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="templateId" className="text-white">Template ID</Label>
+              <Input 
+                id="templateId"
+                value={heyGenSettings.templateId}
+                onChange={(e) => handleHeyGenSettingsChange('templateId', e.target.value)}
+                className="bg-[#2d2d3d] border-zinc-700 text-white"
+                placeholder="Enter your template ID"
+                disabled={useDefaultSettings}
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="voiceId" className="text-white">Voice ID</Label>
+              <Input 
+                id="voiceId"
+                value={heyGenSettings.voiceId}
+                onChange={(e) => handleHeyGenSettingsChange('voiceId', e.target.value)}
+                className="bg-[#2d2d3d] border-zinc-700 text-white"
+                placeholder="Enter your voice ID"
+                disabled={useDefaultSettings}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button 
+              variant="outline" 
+              onClick={() => setIsHeyGenDialogOpen(false)}
+              className="bg-transparent border-zinc-600 text-white hover:bg-zinc-800"
+            >
+              Cancel
+            </Button>
+            <Button 
+              onClick={handleGenerate}
+              className="bg-purple-600 hover:bg-purple-700 text-white"
+              disabled={!useDefaultSettings && (!heyGenSettings.apiKey || !heyGenSettings.avatarId || !heyGenSettings.templateId || !heyGenSettings.voiceId)}
+            >
+              Generate Video
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

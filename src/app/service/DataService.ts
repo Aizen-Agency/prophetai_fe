@@ -188,7 +188,14 @@ const DataService = {
   async generateVideo(data: {
     user_id: number;
     script_id: string;
-    transcript:string;
+    transcript: string;
+    heygen?: {
+      apiKey?: string;
+      avatarId?: string;
+      templateId?: string;
+      voiceId?: string;
+      useDefault?: boolean;
+    }
   }) {
     try {
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/generate-video`, {
