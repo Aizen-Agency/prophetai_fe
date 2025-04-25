@@ -67,7 +67,6 @@ const DataService = {
     credentials: 'include',
   }),
 
-
   // Videos
   getVideos: (userId: number) => api(`/videos/${userId}`),
 
@@ -89,6 +88,7 @@ const DataService = {
     description: string
     link: string
     script_idea: string
+    twitter_content?: { tweets: any[] }
   }) => {
     const userId = getCookie('userId')
     if (!userId) {

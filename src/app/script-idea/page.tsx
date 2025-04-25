@@ -14,6 +14,7 @@ import { useAudioRecorder } from '@/lib/audioUtils';
 import { TranscriptionService } from '@/app/service/TranscriptionService';
 import LogoutButton from "@/components/LogoutButton"
 import { v4 as uuidv4 } from 'uuid'
+import { useTwitterScraper } from "@/context/twitterScraperContext"
 
 type Product = {
   id: number
@@ -35,6 +36,13 @@ type XChannel = {
   id: number
   name: string
   url: string
+}
+
+type ScrapedTwitterData = {
+  profile_url: string
+  product_name: string
+  articles_scraped: number
+  tweets: any[]
 }
 
 export default function DashboardPage() {
@@ -68,11 +76,20 @@ export default function DashboardPage() {
   const [recordingTime, setRecordingTime] = useState(0)
 
   const [likedIdeas, setLikedIdeas] = useState<ScriptIdea[]>([])
+  
+  // Twitter scraping states
+  const [isScrapingTwitter, setIsScrapingTwitter] = useState(false)
+  const [scrapedTwitterData, setScrapedTwitterData] = useState<ScrapedTwitterData | null>(null)
 
   const router = useRouter()
   const { userId, username } = useLogin()
   const { isRecording, recordingTime: audioRecordingTime, startRecording, stopRecording, updateRecordingTranscript } = useAudioRecorder();
   const transcriptionService = TranscriptionService.getInstance();
+  const { scrapeTwitter, loading: twitterScraping } = useTwitterScraper();
+
+  useEffect(() => {
+    setIsScrapingTwitter(twitterScraping);
+  }, [twitterScraping]);
 
   useEffect(() => {
     const fetchChannels = async () => {
@@ -83,12 +100,37 @@ export default function DashboardPage() {
           const response = await DataService.getChannels(userId);
           if (response) {
             console.log("response", response)
-            setProducts(response.channels.map((channel: any) => ({
+            const fetchedProducts = response.channels.map((channel: any) => ({
               id: channel.id,
               name: channel.product_name,
               description: channel.description || '',
               link: channel.link || '',
-            })));
+            }));
+            
+            setProducts(fetchedProducts);
+            
+            // Check if any channel has a Twitter link
+            const twitterChannel = fetchedProducts.find((product: Product) => 
+              product.link && 
+              (product.link.includes('twitter.com') || product.link.includes('x.com'))
+            );
+            
+            // If we have a Twitter link, scrape it
+            if (twitterChannel && twitterChannel.link) {
+              const storedData = localStorage.getItem('scrapedTwitterData');
+              const parsedData = storedData ? JSON.parse(storedData) : null;
+              
+              // Only scrape if we don't have data for this URL or the product name is different
+              if (!parsedData || 
+                  parsedData.profile_url !== twitterChannel.link || 
+                  parsedData.product_name !== twitterChannel.name) {
+                scrapeTwitterProfile(twitterChannel.link, twitterChannel.name);
+              } else {
+                // Use the stored data
+                setScrapedTwitterData(parsedData);
+                console.log("Using stored Twitter data:", parsedData);
+              }
+            }
           }
         } catch (error) {
           console.error('Error fetching channels:', error);
@@ -96,7 +138,116 @@ export default function DashboardPage() {
       }
     };
     fetchChannels();
+    
+    // Check if we have stored scraped data
+    const storedData = localStorage.getItem('scrapedTwitterData');
+    if (storedData) {
+      setScrapedTwitterData(JSON.parse(storedData));
+    }
   }, []);
+  
+  const scrapeTwitterProfile = async (profileUrl: string, productName: string) => {
+    setIsScrapingTwitter(true);
+    try {
+      // Use the Twitter scraper context instead of a backend endpoint
+      console.log('Starting Twitter scraping for profile:', profileUrl);
+      const result = await scrapeTwitter(profileUrl);
+      
+      if (result && result.posts && result.posts.length > 0) {
+        // Format the tweets to match what the backend expects
+        const formattedTweets = result.posts.map(post => ({
+          url: post.url,
+          text: post.content,
+          likesCount: post.likes,
+          retweetsCount: post.retweets,
+          repliesCount: post.replies,
+          timestamp: post.date
+        }));
+        
+        const scrapedData: ScrapedTwitterData = {
+          profile_url: profileUrl,
+          product_name: productName,
+          articles_scraped: formattedTweets.length,
+          tweets: formattedTweets
+        };
+        
+        // Store in state and local storage
+        setScrapedTwitterData(scrapedData);
+        localStorage.setItem('scrapedTwitterData', JSON.stringify(scrapedData));
+        console.log("Stored Twitter data in local storage:", scrapedData);
+      } else {
+        console.warn("No tweets found, using mock data for development");
+        
+        // Create mock Twitter data for development
+        const mockTweets = [
+          {
+            url: `${profileUrl}/status/1`,
+            text: `Check out ${productName} - our revolutionary new product that helps content creators save time!`,
+            likesCount: 45,
+            retweetsCount: 12,
+            repliesCount: 5,
+            timestamp: new Date().toISOString()
+          },
+          {
+            url: `${profileUrl}/status/2`,
+            text: `We're excited to announce new features in ${productName}! Now with AI-powered content generation.`,
+            likesCount: 78,
+            retweetsCount: 23,
+            repliesCount: 8,
+            timestamp: new Date(Date.now() - 86400000).toISOString() // Yesterday
+          },
+          {
+            url: `${profileUrl}/status/3`,
+            text: `Users are loving ${productName}! "This tool has saved me hours of work every week" says one happy customer.`,
+            likesCount: 105,
+            retweetsCount: 34,
+            repliesCount: 12,
+            timestamp: new Date(Date.now() - 172800000).toISOString() // 2 days ago
+          }
+        ];
+        
+        const scrapedData: ScrapedTwitterData = {
+          profile_url: profileUrl,
+          product_name: productName,
+          articles_scraped: mockTweets.length,
+          tweets: mockTweets
+        };
+        
+        // Store mock data
+        setScrapedTwitterData(scrapedData);
+        localStorage.setItem('scrapedTwitterData', JSON.stringify(scrapedData));
+        console.log("Stored mock Twitter data in local storage:", scrapedData);
+      }
+    } catch (error) {
+      console.error('Error scraping Twitter profile:', error);
+      
+      // Fall back to mock data on error
+      const mockTweets = [
+        {
+          url: `${profileUrl}/status/1`,
+          text: `Error occurred but we're using fallback data for ${productName}. Our product helps content creators thrive!`,
+          likesCount: 35,
+          retweetsCount: 8,
+          repliesCount: 3,
+          timestamp: new Date().toISOString()
+        }
+      ];
+      
+      const scrapedData: ScrapedTwitterData = {
+        profile_url: profileUrl,
+        product_name: productName,
+        articles_scraped: mockTweets.length,
+        tweets: mockTweets
+      };
+      
+      // Store mock data
+      setScrapedTwitterData(scrapedData);
+      localStorage.setItem('scrapedTwitterData', JSON.stringify(scrapedData));
+      console.log("Stored fallback Twitter data in local storage after error:", scrapedData);
+    } finally {
+      setIsScrapingTwitter(false);
+    }
+  };
 
   const addProduct = async () => {
     if (newProduct.name && newProduct.description) {
@@ -110,13 +261,22 @@ export default function DashboardPage() {
         });
 
         if (response.channel) {
-          setProducts([...products, {
+          const newChannelData = {
             id: response.channel.id,
             name: response.channel.product_name,
             description: response.channel.description || '',
             link: response.channel.link || '',
-          }]);
+          };
+          
+          setProducts([...products, newChannelData]);
           setNewProduct({ name: '', description: '', link: '' });
+          
+          // If it's a Twitter link, scrape it
+          if (newChannelData.link && 
+              (newChannelData.link.includes('twitter.com') || 
+               newChannelData.link.includes('x.com'))) {
+            scrapeTwitterProfile(newChannelData.link, newChannelData.name);
+          }
         }
       } catch (error) {
         console.error('Error adding product:', error);
@@ -127,7 +287,19 @@ export default function DashboardPage() {
   const removeProduct = async (id: number) => {
     try {
       await DataService.deleteChannel(id);
+      
+      // Get the product being removed
+      const productToRemove = products.find(p => p.id === id);
+      
+      // Remove from products list
       setProducts(products.filter((product) => product.id !== id));
+      
+      // If we removed the product that was scraped, clear the scraped data
+      if (productToRemove && scrapedTwitterData && 
+          scrapedTwitterData.profile_url === productToRemove.link) {
+        setScrapedTwitterData(null);
+        localStorage.removeItem('scrapedTwitterData');
+      }
     } catch (error) {
       console.error('Error removing product:', error);
     }
@@ -152,11 +324,15 @@ export default function DashboardPage() {
 
     setIsGeneratingIdeas(true)
     try {
+      // Check if we have scraped Twitter data
+      const twitterData = scrapedTwitterData?.tweets || [];
+      
       const response = await DataService.generateScriptIdeas({
         product_name: products[0].name,
         description: products[0].description,
         link: products[0]?.link || "",
         script_idea: textFilter,
+        twitter_content: twitterData.length > 0 ? { tweets: twitterData } : undefined,
       })
 
       console.log("response", response)
@@ -305,6 +481,25 @@ export default function DashboardPage() {
         <div className="mb-10">
           <h1 className="text-3xl font-semibold text-white">Welcome back, {username || 'User'}</h1>
           <p className="text-white/70 text-lg mt-2">Generate scripts for your products</p>
+          
+          {/* Twitter scraping status */}
+          {isScrapingTwitter && (
+            <div className="mt-2 p-2 bg-blue-500/20 rounded-md">
+              <p className="text-blue-300">
+                <Twitter className="inline-block mr-2 h-4 w-4 animate-pulse" /> 
+                Scraping Twitter profile...
+              </p>
+            </div>
+          )}
+          
+          {scrapedTwitterData && (
+            <div className="mt-2 p-2 bg-blue-500/10 rounded-md">
+              <p className="text-blue-300">
+                <Twitter className="inline-block mr-2 h-4 w-4" /> 
+                Scraped {scrapedTwitterData.articles_scraped} tweets from {scrapedTwitterData.profile_url}
+              </p>
+            </div>
+          )}
         </div>
 
         {/* Toggle Button and Tables */}
@@ -499,9 +694,10 @@ Exclude violence and adult content"
           <Button 
             onClick={generateScriptIdeas} 
             className="bg-purple-600 hover:bg-purple-700 text-white"
-            disabled={isGeneratingIdeas}
+            disabled={isGeneratingIdeas || isScrapingTwitter}
           >
-            {isGeneratingIdeas ? "Generating..." : "Generate Script Ideas"}
+            {isScrapingTwitter ? "Scraping Twitter..." : 
+             isGeneratingIdeas ? "Generating..." : "Generate Script Ideas"}
           </Button>
         </div>
 

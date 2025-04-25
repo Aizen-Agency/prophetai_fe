@@ -4,6 +4,7 @@ import "./globals.css";
 import { LoginProvider } from "@/context/LoginContext";
 import { InstagramScraperProvider } from "@/context/InstagramScraperContext";
 import { ClientOnly } from "@/components/ClientOnly";
+import { TwitterScraperProvider } from "@/context/twitterScraperContext";
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -33,7 +34,9 @@ export default function RootLayout({
       >
         <LoginProvider>
           <InstagramScraperProvider>
-            <ClientOnly>{children}</ClientOnly>
+            <TwitterScraperProvider>
+              <ClientOnly>{children}</ClientOnly>
+            </TwitterScraperProvider>
           </InstagramScraperProvider>
         </LoginProvider>
       </body>
