@@ -9,11 +9,11 @@ import {
 } from "@/components/ui/popover"
 import { useEffect, useState } from "react"
 import { Dialog, DialogContent } from "@/components/ui/dialog"
-import Heygen_voice_id from "../../../../public/Heygen Voice Id.png"
-import Heygen_avatar_id from "../../../../public/Heygen Avatar Id.png"
-import Heygen_dashboard from "../../../../public/Heygen Dashboard.png"
-import Heygen_api_key from "../../../../public/Heygen Api Key.png"
-import Heygen_template_id from "../../../../public/Heygen Template Id.png"
+// import Heygen_voice_id from "../../../../public/Heygen Voice Id.png"
+// import Heygen_avatar_id from "../../../../public/Heygen Avatar Id.png"
+// import Heygen_dashboard from "../../../../public/Heygen Dashboard.png"
+// import Heygen_api_key from "../../../../public/Heygen Api Key.png"
+// import Heygen_template_id from "../../../../public/Heygen Template Id.png"
 
 interface HeyGenTutorialProps {
   trigger: React.ReactNode;
@@ -84,7 +84,7 @@ export function HeyGenTutorial({ trigger }: HeyGenTutorialProps) {
                 </Button>
               </div>
               <img 
-                src={Heygen_dashboard.src} 
+                src="https://wsadelzc6i66hzhm.public.blob.vercel-storage.com/Heygen%20Dashboard-zfTyfydfC0IT40c4cuDPdlbBm1y5qR.png"
                 alt="HeyGen signup page" 
                 className="rounded-md border border-zinc-700 mb-2 w-full" 
               />
@@ -100,7 +100,7 @@ export function HeyGenTutorial({ trigger }: HeyGenTutorialProps) {
                 <li>Copy the API key from "Heygen API" section</li>
               </ol>
               <img 
-                src={Heygen_api_key.src} 
+                src="https://wsadelzc6i66hzhm.public.blob.vercel-storage.com/Heygen%20API%20Key-JZkd6hZXdZPOpWlcHG5Hge9KITi2Ip.png" 
                 alt="HeyGen API key section" 
                 className="rounded-md border border-zinc-700 mb-2 w-full" 
               />
@@ -116,7 +116,7 @@ export function HeyGenTutorial({ trigger }: HeyGenTutorialProps) {
                 <li>Click on the Avatar ID to copy avatar id</li>
               </ol>
               <img 
-                src={Heygen_avatar_id.src} 
+                src="https://wsadelzc6i66hzhm.public.blob.vercel-storage.com/Heygen%20Avatar%20Id-XndN6RqJxd7lJz9nkvwRafUFDPGJb2.png"
                 alt="HeyGen Avatar section" 
                 className="rounded-md border border-zinc-700 mb-2 w-full" 
               />
@@ -132,7 +132,7 @@ export function HeyGenTutorial({ trigger }: HeyGenTutorialProps) {
                 <li>Click on the Voice ID to copy voice id</li>
               </ol>
               <img 
-                src={Heygen_voice_id.src} 
+                src="https://wsadelzc6i66hzhm.public.blob.vercel-storage.com/Heygen%20Voice%20Id-eKAxUn0p3LnkneCLEd52Db5aXc5AHK.png"
                 alt="HeyGen Voice section" 
                 className="rounded-md border border-zinc-700 mb-2 w-full" 
               />
@@ -147,7 +147,7 @@ export function HeyGenTutorial({ trigger }: HeyGenTutorialProps) {
                 <li>The Template ID can be found in the URL or details panel</li>
               </ol>
               <img 
-                src={Heygen_template_id.src} 
+                src="https://wsadelzc6i66hzhm.public.blob.vercel-storage.com/Heygen%20Template%20Id-VxS0jQbCA978MRFJbT7zBsKq7r4y1d.png" 
                 alt="HeyGen Template section" 
                 className="rounded-md border border-zinc-700 mb-2 w-full" 
               />
