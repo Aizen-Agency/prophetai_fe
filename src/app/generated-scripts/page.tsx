@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Check, ArrowLeft, Plus, ChevronDown, Mic } from "lucide-react"
+import { Check, ArrowLeft, Plus, ChevronDown, Mic, HelpCircle, Info } from "lucide-react"
 import { Button } from "@/components/ui/button"
 // import { toast } from "@/components/ui/use-toast"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -23,6 +23,13 @@ import {
   DialogHeader 
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
+import { HeyGenTutorial } from "./tutorial/tutorial"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
 
 type Script = {
   id: number
@@ -369,12 +376,25 @@ export default function DashboardPage() {
 
       {/* HeyGen Settings Dialog */}
       <Dialog open={isHeyGenDialogOpen} onOpenChange={setIsHeyGenDialogOpen}>
-        <DialogContent className="bg-[#1a1c2e] text-white border-zinc-700">
+        <DialogContent className="bg-[#1a1c2e] text-white border-zinc-700 max-w-2xl">
           <DialogHeader>
-            <DialogTitle className="text-xl">HeyGen API Settings</DialogTitle>
-            <DialogDescription className="text-zinc-400">
-              Enter your HeyGen API credentials to generate the video
-            </DialogDescription>
+            <div className="flex items-center justify-between">
+              <DialogTitle className="text-xl">HeyGen API Settings</DialogTitle>
+              
+            </div>
+            <div className="flex items-center justify-between">
+              <DialogDescription className="text-zinc-400">
+                Enter your HeyGen API credentials to generate the video
+              </DialogDescription>
+            <HeyGenTutorial 
+                trigger={
+                  <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full">
+                    <HelpCircle className="h-5 w-5 text-white/70" />
+                    <span className="sr-only">HeyGen Setup Guide</span>
+                  </Button>
+                } 
+              />
+            </div>
           </DialogHeader>
           
           <div className="flex items-center space-x-2 mb-2">
@@ -392,7 +412,21 @@ export default function DashboardPage() {
           
           <div className={`grid gap-4 py-4 ${useDefaultSettings ? 'opacity-50 pointer-events-none' : ''}`}>
             <div className="grid gap-2">
-              <Label htmlFor="apiKey" className="text-white">API Key</Label>
+              <div className="flex items-center">
+                <Label htmlFor="apiKey" className="text-white">API Key</Label>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button variant="ghost" size="icon" className="h-5 w-5 ml-2">
+                        <Info className="h-3.5 w-3.5 text-zinc-400" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent side="right">
+                      <p>Found in HeyGen Developer settings</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </div>
               <Input 
                 id="apiKey" 
                 value={heyGenSettings.apiKey}
@@ -403,7 +437,21 @@ export default function DashboardPage() {
               />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="avatarId" className="text-white">Avatar ID</Label>
+              <div className="flex items-center">
+                <Label htmlFor="avatarId" className="text-white">Avatar ID</Label>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button variant="ghost" size="icon" className="h-5 w-5 ml-2">
+                        <Info className="h-3.5 w-3.5 text-zinc-400" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent side="right">
+                      <p>Found in Avatars section</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </div>
               <Input 
                 id="avatarId" 
                 value={heyGenSettings.avatarId}
@@ -414,7 +462,21 @@ export default function DashboardPage() {
               />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="templateId" className="text-white">Template ID</Label>
+              <div className="flex items-center">
+                <Label htmlFor="templateId" className="text-white">Template ID</Label>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button variant="ghost" size="icon" className="h-5 w-5 ml-2">
+                        <Info className="h-3.5 w-3.5 text-zinc-400" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent side="right">
+                      <p>Found in Templates section (optional)</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </div>
               <Input 
                 id="templateId"
                 value={heyGenSettings.templateId}
@@ -425,7 +487,21 @@ export default function DashboardPage() {
               />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="voiceId" className="text-white">Voice ID</Label>
+              <div className="flex items-center">
+                <Label htmlFor="voiceId" className="text-white">Voice ID</Label>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button variant="ghost" size="icon" className="h-5 w-5 ml-2">
+                        <Info className="h-3.5 w-3.5 text-zinc-400" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent side="right">
+                      <p>Found in Voice section</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </div>
               <Input 
                 id="voiceId"
                 value={heyGenSettings.voiceId}
