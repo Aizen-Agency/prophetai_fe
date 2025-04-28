@@ -3,6 +3,8 @@
 import { useState, useEffect } from "react"
 import { Check, ArrowLeft, Plus, ChevronDown, Mic, HelpCircle, Info } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { Eye, EyeOff } from 'lucide-react'
+
 // import { toast } from "@/components/ui/use-toast"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
@@ -30,6 +32,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
+import { HeyGenErrorHandler } from "./error_handler_heygen/error_handler"
 
 type Script = {
   id: number
@@ -45,8 +48,13 @@ type Script = {
 type HeyGenSettings = {
   apiKey: string
   avatarId: string
-  templateId: string
   voiceId: string
+  background: {
+    type: "color" | "image" | "video"
+    value?: string
+    url?: string
+    assetId?: string
+  }
 }
 
 export default function DashboardPage() {
@@ -56,13 +64,21 @@ export default function DashboardPage() {
   const [sortOption, setSortOption] = useState<"newest" | "oldest" | "az" | "za">("newest")
   const [scripts, setScripts] = useState<Script[]>([])
   const [isHeyGenDialogOpen, setIsHeyGenDialogOpen] = useState(false)
+  const [showApiKey, setShowApiKey] = useState(false)
   const [heyGenSettings, setHeyGenSettings] = useState<HeyGenSettings>({
     apiKey: "",
     avatarId: "",
-    templateId: "",
-    voiceId: ""
+    voiceId: "",
+    background: {
+      type: "color",
+      value: "#008000"
+    }
   })
   const [useDefaultSettings, setUseDefaultSettings] = useState(false)
+  const [error, setError] = useState<{
+    type: "missing_attributes" | "backend_error" | "api_error" | "network_error"
+    message: string
+  } | null>(null)
 
   const { userId, username } = useLogin()
 
@@ -86,7 +102,15 @@ export default function DashboardPage() {
     // Load previous HeyGen settings from localStorage if available
     const savedSettings = localStorage.getItem('heyGenSettings')
     if (savedSettings) {
-      setHeyGenSettings(JSON.parse(savedSettings))
+      const parsed = JSON.parse(savedSettings);
+      // Ensure background object exists with default values
+      setHeyGenSettings({
+        ...parsed,
+        background: parsed.background || {
+          type: "color",
+          value: "#008000"
+        }
+      });
     }
     
     // Load useDefault preference
@@ -114,11 +138,21 @@ export default function DashboardPage() {
     }
   }
 
-  const handleHeyGenSettingsChange = (field: keyof HeyGenSettings, value: string) => {
-    setHeyGenSettings(prev => ({
-      ...prev,
-      [field]: value
-    }))
+  const handleHeyGenSettingsChange = (field: keyof HeyGenSettings | 'background', value: any) => {
+    if (field === 'background') {
+      setHeyGenSettings(prev => ({
+        ...prev,
+        background: {
+          ...prev.background,
+          ...value
+        }
+      }))
+    } else {
+      setHeyGenSettings(prev => ({
+        ...prev,
+        [field]: value
+      }))
+    }
   }
 
   const saveHeyGenSettings = () => {
@@ -140,32 +174,49 @@ export default function DashboardPage() {
 
   const handleGenerate = async () => {
     if (selectedScripts.length === 0) {
-      console.log("No scripts selected");
-      return;
+      setError({
+        type: "missing_attributes",
+        message: "Please select at least one script to generate a video"
+      })
+      return
     }
 
-    setIsGenerating(true);
-    setIsHeyGenDialogOpen(false);
-    saveHeyGenSettings();
+    if (!useDefaultSettings && (!heyGenSettings.apiKey || !heyGenSettings.avatarId || !heyGenSettings.voiceId)) {
+      setError({
+        type: "missing_attributes",
+        message: "Please provide all required HeyGen settings or use default settings"
+      })
+      return
+    }
+
+    setIsGenerating(true)
+    setIsHeyGenDialogOpen(false)
+    saveHeyGenSettings()
 
     try {
       if (!userId) {
-        console.error('User not authenticated')
+        setError({
+          type: "backend_error",
+          message: "User not authenticated. Please log in again."
+        })
         return
       }
 
       // For each selected script, generate a video
       const videoPromises = selectedScripts.map(scriptId => {
-        const script = scripts.find(s => s.id === scriptId);
+        const script = scripts.find(s => s.id === scriptId)
         if (!script) {
-          console.error(`Script with id ${scriptId} not found`);
-          return null;
+          setError({
+            type: "backend_error",
+            message: `Script with id ${scriptId} not found`
+          })
+          return null
         }
         
         // Get transcript from localStorage based on idea_id
-        const storedScripts = JSON.parse(localStorage.getItem('generatedScripts') || '[]');
-        const currentScript = storedScripts.find((s: any) => s.id === scriptId);
-        const transcript = currentScript?.transcript || "transcript";
+        const storedScripts = JSON.parse(localStorage.getItem('generatedScripts') || '[]')
+        const currentScript = storedScripts.find((s: any) => s.id === scriptId)
+        const transcript = currentScript?.transcript || "transcript"
         
         return DataService.generateVideo({
           user_id: userId,
@@ -176,48 +227,60 @@ export default function DashboardPage() {
             {
               apiKey: heyGenSettings.apiKey,
               avatarId: heyGenSettings.avatarId,
-              templateId: heyGenSettings.templateId,
               voiceId: heyGenSettings.voiceId,
-              useDefault: false
+              useDefault: false,
+              background: {
+                type: heyGenSettings.background.type,
+                ...(heyGenSettings.background.type === 'color' && { value: heyGenSettings.background.value }),
+                ...(heyGenSettings.background.type !== 'color' && heyGenSettings.background.url && { url: heyGenSettings.background.url }),
+                ...(heyGenSettings.background.type !== 'color' && heyGenSettings.background.assetId && { assetId: heyGenSettings.background.assetId })
+              }
             }
         }).catch(error => {
-          console.error(`Error generating video for script ${scriptId}:`, error);
-          return null;
-        });
-      });
+          setError({
+            type: "api_error",
+            message: `Error generating video for script ${scriptId}: ${error.message}`
+          })
+          return null
+        })
+      })
 
       // Store the first selected script's idea_id in a cookie for later use
-      const firstSelectedScript = scripts.find(s => s.id === selectedScripts[0]);
+      const firstSelectedScript = scripts.find(s => s.id === selectedScripts[0])
       if (firstSelectedScript) {
         Cookies.set("idea_id", firstSelectedScript.idea_id, {
           secure: true,
           sameSite: 'strict', 
           expires: 7
-        });
+        })
       }
        
       // Wait for all videos to be generated
-      const results = await Promise.all(videoPromises.filter(Boolean));
+      const results = await Promise.all(videoPromises.filter(Boolean))
       
       // Check if any videos were successfully generated
-      const successfulGenerations = results.filter(result => result !== null);
+      const successfulGenerations = results.filter(result => result !== null)
       
       if (successfulGenerations.length > 0) {
-        // Extract the video_id from the first successful generation
-        const videoId = successfulGenerations[0].video_id;
-        // Navigate to the videos page with video_id
-        router.push(`/your-video?video_id=${videoId}`);
+        // Extract all video IDs from successful generations
+        const videoIds = successfulGenerations.map(result => result.video_id)
+        // Navigate to the videos page with all video IDs
+        router.push(`/your-video?video_ids=${videoIds.join(',')}`)
       } else {
-        console.error('Failed to generate any videos');
-        // TODO: Show error toast/notification to user
+        setError({
+          type: "backend_error",
+          message: "Failed to generate any videos. Please try again."
+        })
       }
     } catch (error) {
-      console.error('Error generating videos:', error);
-      // TODO: Show error toast/notification to user
+      setError({
+        type: "network_error",
+        message: "An unexpected error occurred. Please try again later."
+      })
     } finally {
-      setIsGenerating(false);
+      setIsGenerating(false)
     }
-  };
+  }
 
   const sortedScripts = [...scripts].sort((a, b) => {
     switch (sortOption) {
@@ -427,14 +490,30 @@ export default function DashboardPage() {
                   </Tooltip>
                 </TooltipProvider>
               </div>
-              <Input 
-                id="apiKey" 
-                value={heyGenSettings.apiKey}
-                onChange={(e) => handleHeyGenSettingsChange('apiKey', e.target.value)}
-                className="bg-[#2d2d3d] border-zinc-700 text-white"
-                placeholder="Enter your HeyGen API key"
-                disabled={useDefaultSettings}
-              />
+              <div className="relative">
+                <Input
+                  id="apiKey"
+                  type={showApiKey ? "text" : "password"}
+                  value={heyGenSettings.apiKey}
+                  onChange={(e) => handleHeyGenSettingsChange("apiKey", e.target.value)}
+                  className="pr-20 border-2 border-primary/50 focus:border-primary"
+                  required
+                  placeholder="Enter your HeyGen API key"
+                />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="absolute right-1 top-1/2 -translate-y-1/2 h-7 px-2"
+                  onClick={() => setShowApiKey(!showApiKey)}
+                >
+                  {showApiKey ? (
+                  <EyeOff className="h-4 w-4 text-gray-500" />
+                ) : (
+                  <Eye className="h-4 w-4 text-gray-500" />
+                )}
+                </Button>
+              </div>
             </div>
             <div className="grid gap-2">
               <div className="flex items-center">
@@ -455,34 +534,9 @@ export default function DashboardPage() {
               <Input 
                 id="avatarId" 
                 value={heyGenSettings.avatarId}
-                onChange={(e) => handleHeyGenSettingsChange('avatarId', e.target.value)}
+                onChange={(e) => handleHeyGenSettingsChange("avatarId", e.target.value)}
                 className="bg-[#2d2d3d] border-zinc-700 text-white"
                 placeholder="Enter your avatar ID"
-                disabled={useDefaultSettings}
-              />
-            </div>
-            <div className="grid gap-2">
-              <div className="flex items-center">
-                <Label htmlFor="templateId" className="text-white">Template ID</Label>
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button variant="ghost" size="icon" className="h-5 w-5 ml-2">
-                        <Info className="h-3.5 w-3.5 text-zinc-400" />
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent side="right">
-                      <p>Found in Templates section (optional)</p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              </div>
-              <Input 
-                id="templateId"
-                value={heyGenSettings.templateId}
-                onChange={(e) => handleHeyGenSettingsChange('templateId', e.target.value)}
-                className="bg-[#2d2d3d] border-zinc-700 text-white"
-                placeholder="Enter your template ID"
                 disabled={useDefaultSettings}
               />
             </div>
@@ -505,11 +559,60 @@ export default function DashboardPage() {
               <Input 
                 id="voiceId"
                 value={heyGenSettings.voiceId}
-                onChange={(e) => handleHeyGenSettingsChange('voiceId', e.target.value)}
+                onChange={(e) => handleHeyGenSettingsChange("voiceId", e.target.value)}
                 className="bg-[#2d2d3d] border-zinc-700 text-white"
                 placeholder="Enter your voice ID"
                 disabled={useDefaultSettings}
               />
+            </div>
+            <div className="grid gap-2">
+              <Label>Background Type</Label>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" className="w-full justify-between bg-[#2d2d3d] border-zinc-700 text-white hover:bg-[#3d3d4d]">
+                    {(heyGenSettings.background?.type || "color").charAt(0).toUpperCase() + 
+                     (heyGenSettings.background?.type || "color").slice(1)}
+                    <ChevronDown className="ml-2 h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="bg-[#2d2d3d] border-zinc-700">
+                  <DropdownMenuItem onClick={() => handleHeyGenSettingsChange("background", { type: "color", value: "#008000" })} className="text-white hover:bg-[#3d3d4d]">
+                    Color
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => handleHeyGenSettingsChange("background", { type: "image" })} className="text-white hover:bg-[#3d3d4d]">
+                    Image
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => handleHeyGenSettingsChange("background", { type: "video" })} className="text-white hover:bg-[#3d3d4d]">
+                    Video
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+
+              {heyGenSettings.background.type === "color" && (
+                <Input
+                  type="color"
+                  value={heyGenSettings.background.value || "#008000"}
+                  onChange={(e) => handleHeyGenSettingsChange("background", { value: e.target.value })}
+                  className="bg-[#2d2d3d] border-zinc-700 text-white h-10"
+                />
+              )}
+
+              {(heyGenSettings.background.type === "image" || heyGenSettings.background.type === "video") && (
+                <>
+                  <Input
+                    placeholder={`Enter ${heyGenSettings.background.type} URL`}
+                    value={heyGenSettings.background.url || ""}
+                    onChange={(e) => handleHeyGenSettingsChange("background", { url: e.target.value })}
+                    className="bg-[#2d2d3d] border-zinc-700 text-white"
+                  />
+                  <Input
+                    placeholder={`Enter ${heyGenSettings.background.type} asset ID`}
+                    value={heyGenSettings.background.assetId || ""}
+                    onChange={(e) => handleHeyGenSettingsChange("background", { assetId: e.target.value })}
+                    className="bg-[#2d2d3d] border-zinc-700 text-white"
+                  />
+                </>
+              )}
             </div>
           </div>
           <DialogFooter>
@@ -523,13 +626,17 @@ export default function DashboardPage() {
             <Button 
               onClick={handleGenerate}
               className="bg-purple-600 hover:bg-purple-700 text-white"
-              disabled={!useDefaultSettings && (!heyGenSettings.apiKey || !heyGenSettings.avatarId || !heyGenSettings.templateId || !heyGenSettings.voiceId)}
+              disabled={!useDefaultSettings && (!heyGenSettings.apiKey || !heyGenSettings.avatarId || !heyGenSettings.voiceId)}
             >
               Generate Video
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      <HeyGenErrorHandler 
+        error={error} 
+        onClose={() => setError(null)} 
+      />
     </div>
   )
 }

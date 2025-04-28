@@ -366,18 +366,23 @@ export default function YourVideosPage() {
       }
     };
 
-    const videoId = new URLSearchParams(window.location.search).get('video_id');
-    // Only check video status if we haven't processed this video ID before
-    if (videoId && !processedVideoIds.current.has(videoId)) {
-      // Mark this video ID as processed
-      processedVideoIds.current.add(videoId);
-      checkVideoStatus(videoId);
+    const videoIds = new URLSearchParams(window.location.search).get('video_ids');
+    // Only check video status if we haven't processed these video IDs before
+    if (videoIds) {
+      const ids = videoIds.split(',');
+      ids.forEach(videoId => {
+        if (!processedVideoIds.current.has(videoId)) {
+          // Mark this video ID as processed
+          processedVideoIds.current.add(videoId);
+          checkVideoStatus(videoId);
+        }
+      });
     }
 
     fetchVideos();
     
     // Clear URL parameter after processing to prevent reprocessing on page refreshes
-    if (videoId) {
+    if (videoIds) {
       const newUrl = window.location.pathname;
       window.history.replaceState({}, document.title, newUrl);
     }
@@ -515,7 +520,7 @@ export default function YourVideosPage() {
         {/* Display pending videos */}
         {pendingVideos.length > 0 && (
           <div className="mb-8">
-            <h2 className="text-xl font-semibold text-white mb-4">Videos in Processing</h2>
+            <h2 className="text-xl font-semibold text-white mb-4">Videos in Processing ({pendingVideos.length})</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {pendingVideos.map((pendingVideo) => (
                 <Card key={pendingVideo.videoId} className="bg-white/10 border-none shadow-lg">
@@ -547,6 +552,7 @@ export default function YourVideosPage() {
                     </div>
                     <div className="text-sm text-white/70">
                       <p className="text-white">Processing Video #{pendingVideo.videoId}</p>
+                      <p className="text-xs mt-1">Status: {pendingVideo.status}</p>
                     </div>
                   </CardContent>
                 </Card>

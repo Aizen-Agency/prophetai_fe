@@ -195,6 +195,12 @@ const DataService = {
       templateId?: string;
       voiceId?: string;
       useDefault?: boolean;
+      background?: {
+        type: "color" | "image" | "video";
+        value?: string;
+        url?: string;
+        assetId?: string;
+      };
     }
   }) {
     try {

@@ -3,6 +3,7 @@
 import { LayoutDashboard, FileText, Video, Send } from 'lucide-react'
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { useRouter } from 'next/navigation'
+import { useLogin } from '@/context/LoginContext'
 
 
 interface SidebarProps {
@@ -21,6 +22,7 @@ const sidebarItems = [
 
 export function Sidebar({ activeItem = "scripts" }: SidebarProps) {
   const router = useRouter();
+  const { username } = useLogin();
 
   const navigate = (link: string) => {
     console.log("Navigating to:", link);
@@ -61,11 +63,11 @@ export function Sidebar({ activeItem = "scripts" }: SidebarProps) {
             onClick={() => {navigate('performance-tracker')}}
             >
           <Avatar className="h-16 w-16">
-            <AvatarImage src="/placeholder.svg?height=64&width=64" alt="Jessie" />
-            <AvatarFallback>JE</AvatarFallback>
+            <AvatarImage src="/placeholder.svg?height=64&width=64" alt={username} />
+            <AvatarFallback>{username?.charAt(0).toUpperCase()}</AvatarFallback>
           </Avatar>
           <div className="text-sm text-center">
-            <div className="font-medium">Jessie</div>
+            <div className="font-medium">{username}</div>
             <div className="text-white/50">Account</div>
           </div>
         </div>
