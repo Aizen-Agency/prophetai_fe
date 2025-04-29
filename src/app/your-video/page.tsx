@@ -305,14 +305,18 @@ export default function YourVideosPage() {
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({ video_id: videoId, user_id: userId, script_id: scriptId }),
+          body: JSON.stringify({ 
+            video_ids: [videoId], 
+            user_id: userId, 
+            script_id: scriptId 
+          }),
         });
 
         const data = await response.json();
         console.log('Upload response:', data);
         
         if (response.status === 200) {
-          // Video is completed or already exists
+          // All videos are completed
           setPendingVideos(prev => 
             prev.filter(v => v.videoId !== videoId)
           );
@@ -325,16 +329,21 @@ export default function YourVideosPage() {
             router.refresh();
           }
         } else if (response.status === 202) {
-          // Video is still processing
-          setPendingVideos(prev => 
-            prev.map(video => 
-              video.videoId === videoId ? { 
-                ...video, 
-                status: 'processing', 
-                message: data.message || 'Video is still processing. Please check back later.'
-              } : video
-            )
-          );
+          // Some videos are still processing
+          if (data.results && data.results.length > 0) {
+            const videoResult = data.results.find((r: any) => r.video_id === videoId);
+            if (videoResult) {
+              setPendingVideos(prev => 
+                prev.map(video => 
+                  video.videoId === videoId ? { 
+                    ...video, 
+                    status: videoResult.status, 
+                    message: videoResult.message || 'Video is still processing. Please check back later.'
+                  } : video
+                )
+              );
+            }
+          }
           
           // Set up a polling mechanism to check status every 10 seconds
           setTimeout(() => checkVideoStatus(videoId), 10000);
@@ -572,9 +581,9 @@ export default function YourVideosPage() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredAndSortedVideos?.map((video) => (
-              <Card key={video.id} className="bg-white/10 border-none shadow-lg">
-                <CardContent>
-                  <div className="aspect-video mt-4 bg-black/20 rounded-lg mb-4 relative">
+              <div key={video.id} className="w-full">
+                <Card className="bg-[#151F38] border-0 shadow-lg shadow-black/25 overflow-hidden">
+                  <div className="relative aspect-video bg-gray-800">
                     {!video.video_url ? (
                       <div className="flex flex-col items-center justify-center h-full bg-black/30 rounded-lg p-4">
                         <div className="w-16 h-16 rounded-full bg-black/40 flex items-center justify-center mb-3">
@@ -589,7 +598,6 @@ export default function YourVideosPage() {
                           size="sm"
                           className="mt-4"
                           onClick={() => {
-                            // Refresh to try loading video again
                             router.refresh();
                           }}
                         >
@@ -599,66 +607,46 @@ export default function YourVideosPage() {
                     ) : (
                       <>
                         <VideoPlayer url={video.video_url} id={video.id} />
-                        <div className="absolute top-2 right-2 flex gap-1">
-                          <Button
-                            variant="default"
-                            size="icon"
-                            className="rounded-full bg-gray-700/50 hover:bg-gray-600/60 backdrop-blur-sm transition-all duration-300 border border-gray-500/30 w-10 h-10 p-2 group"
-                            onClick={async () => {
-                              try {
-                                // Create an anchor element to download the video
+                        <Button
+                          variant="default"
+                          size="icon"
+                          className="absolute top-2 right-2 rounded-full bg-gray-700/50 hover:bg-gray-600/60 backdrop-blur-sm transition-all duration-300 border border-gray-500/30 w-10 h-10 p-2 group z-10"
+                          onClick={async () => {
+                            try {
+                              const a = document.createElement('a');
+                              a.href = video.video_url;
+                              a.download = `video-${video.id}.mp4`;
+                              document.body.appendChild(a);
+                              a.click();
+                              document.body.removeChild(a);
+                            } catch (error) {
+                              console.error('Error downloading video:', error);
+                              const proxyUrl = await createProxyUrl(video);
+                              if (proxyUrl) {
                                 const a = document.createElement('a');
-                                a.href = video.video_url;
+                                a.href = proxyUrl;
                                 a.download = `video-${video.id}.mp4`;
                                 document.body.appendChild(a);
                                 a.click();
                                 document.body.removeChild(a);
-                              } catch (error) {
-                                console.error('Error downloading video:', error);
-                                
-                                // Try proxy approach as fallback
-                                const proxyUrl = await createProxyUrl(video);
-                                if (proxyUrl) {
-                                  const a = document.createElement('a');
-                                  a.href = proxyUrl;
-                                  a.download = `video-${video.id}.mp4`;
-                                  document.body.appendChild(a);
-                                  a.click();
-                                  document.body.removeChild(a);
-                                }
                               }
-                            }}
-                          >
-                            <Download className="w-5 h-5 text-gray-300 group-hover:text-gray-100 group-hover:scale-110 transition-all duration-300" />
-                            <span className="sr-only">Download</span>
-                          </Button>
-                        </div>
+                            }
+                          }}
+                        >
+                          <Download className="w-5 h-5 text-gray-300 group-hover:text-gray-100 group-hover:scale-110 transition-all duration-300" />
+                          <span className="sr-only">Download</span>
+                        </Button>
                       </>
                     )}
                   </div>
-                  <div className="flex justify-between items-center">
-                    <div className="text-sm text-white/70">
-                      <p className="text-white">Video #{video.id}</p>
-                      <p> {new Date(video.created_at).toLocaleDateString()}</p>
+                  <CardContent className="p-4">
+                    <h3 className="text-lg font-semibold text-white truncate">Video #{video.id}</h3>
+                    <div className="flex justify-between items-center mt-2">
+                      <span className="text-xs text-gray-400">{new Date(video.created_at).toLocaleDateString()}</span>
                     </div>
-                    {video.video_url && (
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="text-gray-300 hover:text-white"
-                        onClick={() => copyVideoUrl(video.video_url, video.id)}
-                      >
-                        {copiedId === video.id ? (
-                          <CheckCircle2 className="w-5 h-5 text-green-400" />
-                        ) : (
-                          <Copy className="w-5 h-5" />
-                        )}
-                        <span className="sr-only">Copy URL</span>
-                      </Button>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
+                  </CardContent>
+                </Card>
+              </div>
             ))}
           </div>
         )}

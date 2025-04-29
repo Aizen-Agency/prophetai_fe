@@ -122,21 +122,19 @@ export default function DashboardPage() {
 
   const toggleScriptSelection = (scriptId: number) => {
     setSelectedScripts((prev) => {
+      // If the script is already selected, deselect it
       if (prev.includes(scriptId)) {
-        return prev.filter((id) => id !== scriptId)
-      } else {
-        return [...prev, scriptId]
+        return [];
       }
-    })
-  }
+      // Otherwise, select only this script
+      return [scriptId];
+    });
+  };
 
   const handleSelectAll = () => {
-    if (selectedScripts.length === scripts.length) {
-      setSelectedScripts([])
-    } else {
-      setSelectedScripts(scripts.map((script) => script.id))
-    }
-  }
+    // Since we only allow one selection, this will clear the selection
+    setSelectedScripts([]);
+  };
 
   const handleHeyGenSettingsChange = (field: keyof HeyGenSettings | 'background', value: any) => {
     if (field === 'background') {
@@ -333,14 +331,14 @@ export default function DashboardPage() {
               <CardContent className="flex items-center p-2">
                 <div
                   className={`w-5 h-5 rounded-full border-2 border-white mr-2 flex items-center justify-center cursor-pointer ${
-                    selectedScripts.length === scripts.length ? "bg-white" : ""
+                    selectedScripts.length === 1 ? "bg-white" : ""
                   }`}
                   onClick={handleSelectAll}
                 >
-                  {selectedScripts.length === scripts.length && <Check className="h-3 w-3 text-black" />}
+                  {selectedScripts.length === 1 && <Check className="h-3 w-3 text-black" />}
                 </div>
                 <Label className="text-white cursor-pointer" onClick={handleSelectAll}>
-                  Select All
+                  Clear Selection
                 </Label>
               </CardContent>
             </Card>
@@ -375,7 +373,7 @@ export default function DashboardPage() {
               ) : (
                 <>
                   <Plus className="mr-2 h-4 w-4" />
-                  Generate Videos
+                  Generate Video
                 </>
               )}
             </Button>
