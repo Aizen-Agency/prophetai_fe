@@ -10,14 +10,13 @@ export default function LogoutButton() {
   const { logout } = useLogin();
 
   const handleLogout = () => {
-    // Expire all cookies by setting them to expire in the past
-    const pastDate = new Date(0);
-    Cookies.set('isLoggedIn', 'false', { expires: pastDate });
-    Cookies.set('username', '', { expires: pastDate });
-    Cookies.set('isAdmin', 'false', { expires: pastDate });
-    Cookies.set('userId', '0', { expires: pastDate });
+    // Remove all cookies with proper attributes
+    Cookies.remove('isLoggedIn', { path: '/', secure: true, sameSite: 'strict' });
+    Cookies.remove('username', { path: '/', secure: true, sameSite: 'strict' });
+    Cookies.remove('isAdmin', { path: '/', secure: true, sameSite: 'strict' });
+    Cookies.remove('userId', { path: '/', secure: true, sameSite: 'strict' });
     
-    // Call the context logout function
+    // Call the context logout function to update the state
     logout();
     
     // Redirect to login page
