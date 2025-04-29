@@ -9,6 +9,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { AdminSidebar } from "@/components/admin-sidebar"
 import DataService from "@/app/service/DataService"
+import LogoutButton from "@/components/LogoutButton"  
 
 interface User {
   id: number
@@ -19,15 +20,14 @@ interface User {
 
 interface Video {
   id: number
-  name: string
-  size: number
-  thumbnail: string
-  userId: number
-  aiModel: string
-  duration: string
-  quality: string
-  createdAt: string
-  user: User
+  video_url: string
+  size: string
+  created_at: string
+  user: {
+    id: number
+    name: string
+    email: string
+  }
 }
 
 type SortOption = "nameAsc" | "nameDesc" | "sizeAsc" | "sizeDesc" | "dateAsc" | "dateDesc"
@@ -65,28 +65,28 @@ export default function AdminDashboard(): JSX.Element {
   useEffect(() => {
     const sorted = [...videos].filter(
       (video) =>
-        (video.name?.toLowerCase() || '').includes(searchQuery.toLowerCase()) &&
-        (!selectedUser || video.userId === selectedUser),
+        (video.user.name?.toLowerCase() || '').includes(searchQuery.toLowerCase()) &&
+        (!selectedUser || video.user.id === selectedUser),
     )
 
     switch (sortOption) {
       case "nameAsc":
-        sorted.sort((a, b) => (a.name || '').localeCompare(b.name || ''))
+        sorted.sort((a, b) => (a.user.name || '').localeCompare(b.user.name || ''))
         break
       case "nameDesc":
-        sorted.sort((a, b) => (b.name || '').localeCompare(a.name || ''))
+        sorted.sort((a, b) => (b.user.name || '').localeCompare(a.user.name || ''))
         break
       case "sizeAsc":
-        sorted.sort((a, b) => (a.size || 0) - (b.size || 0))
+        sorted.sort((a, b) => (a.size || '').localeCompare(b.size || ''))
         break
       case "sizeDesc":
-        sorted.sort((a, b) => (b.size || 0) - (a.size || 0))
+        sorted.sort((a, b) => (b.size || '').localeCompare(a.size || ''))
         break
       case "dateAsc":
-        sorted.sort((a, b) => new Date(a.createdAt || 0).getTime() - new Date(b.createdAt || 0).getTime())
+        sorted.sort((a, b) => new Date(a.created_at || 0).getTime() - new Date(b.created_at || 0).getTime())
         break
       case "dateDesc":
-        sorted.sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime())
+        sorted.sort((a, b) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime())
         break
     }
 
@@ -110,12 +110,14 @@ export default function AdminDashboard(): JSX.Element {
   }
 
   // Get unique users from videos
-  const users = Array.from(new Set(videos.map(video => video.user))).map(user => ({
-    id: user.id,
-    name: user.name,
-    email: user.email,
-    avatar: user.avatar
-  }))
+  const users = Array.from(new Set(videos.map(video => video.user.id))).map(userId => {
+    const user = videos.find(v => v.user.id === userId)?.user;
+    return {
+      id: userId,
+      name: user?.name || '',
+      email: user?.email || ''
+    };
+  });
 
   return (
     <div className="min-h-screen text-white flex relative overflow-hidden">
@@ -127,12 +129,11 @@ export default function AdminDashboard(): JSX.Element {
       <div className="absolute inset-0 bg-gradient-to-br from-[#080f25]/80 via-[#1a1c2e]/60 to-[#2d1b3d]/40"></div>
 
       {/* Sidebar Component */}
-      <div className="sticky top-0 h-screen">
-        <AdminSidebar />
-      </div>
+      <AdminSidebar />
+      <LogoutButton />
 
       {/* Main Content */}
-      <div className="flex-1 p-10 relative z-10 overflow-y-auto">
+      <div className="flex-1 p-10 relative z-10 overflow-y-auto no-scrollbar ml-[220px]">
         <h1 className="text-3xl font-semibold text-white mb-6">AI Video Management</h1>
 
         {/* User List */}
@@ -151,10 +152,6 @@ export default function AdminDashboard(): JSX.Element {
                 onClick={() => setSelectedUser(user.id)}
                 className={`flex-shrink-0 ${selectedUser === user.id ? "bg-purple-600" : "bg-[#151F38]"}`}
               >
-                <Avatar className="w-6 h-6 mr-2">
-                  <AvatarImage src={user.avatar} alt={user.name} />
-                  <AvatarFallback>{user.name[0]}</AvatarFallback>
-                </Avatar>
                 {user.name}
               </Button>
             ))}
@@ -201,40 +198,29 @@ export default function AdminDashboard(): JSX.Element {
               <div key={video.id} className="w-full">
                 <Card className="bg-[#151F38] border-0 shadow-lg shadow-black/25 overflow-hidden">
                   <div className="relative aspect-video bg-gray-800">
-                    <img
-                      src={video.thumbnail || "/placeholder.svg"}
-                      alt={video.name}
+                    <video
+                      src={video.video_url}
+                      controls
                       className="w-full h-full object-cover"
                     />
                     <div className="absolute top-2 left-2 bg-black/50 text-white text-xs px-2 py-1 rounded">
-                      {video.aiModel}
+                      {video.size}
                     </div>
                     <Button
                       variant="default"
                       size="icon"
                       className="absolute top-2 right-2 rounded-full bg-gray-700/50 hover:bg-gray-600/60 backdrop-blur-sm transition-all duration-300 border border-gray-500/30 w-10 h-10 p-2 group z-10"
+                      onClick={() => window.open(video.video_url, '_blank')}
                     >
                       <Download className="w-5 h-5 text-gray-300 group-hover:text-gray-100 group-hover:scale-110 transition-all duration-300" />
                       <span className="sr-only">Download</span>
                     </Button>
                   </div>
                   <CardContent className="p-4">
-                    <h3 className="text-lg font-semibold text-white truncate">{video.name}</h3>
+                    <h3 className="text-lg font-semibold text-white truncate">{video.user.name}</h3>
                     <div className="flex justify-between items-center mt-2">
                       <p className="text-sm text-gray-400">{video.size}</p>
-                      <p className="text-sm text-gray-400">
-                        {video.duration} | {video.quality}
-                      </p>
-                    </div>
-                    <div className="flex items-center justify-between mt-3">
-                      <div className="flex items-center">
-                        <Avatar className="w-6 h-6 mr-2">
-                          <AvatarImage src={video.user.avatar || ""} alt={video.user.name} />
-                          <AvatarFallback>{video.user.name[0]}</AvatarFallback>
-                        </Avatar>
-                        <span className="text-sm text-gray-300">{video.user.name}</span>
-                      </div>
-                      <span className="text-xs text-gray-400">{video.createdAt}</span>
+                      <span className="text-xs text-gray-400">{video.created_at}</span>
                     </div>
                   </CardContent>
                 </Card>
