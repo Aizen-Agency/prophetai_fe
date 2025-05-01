@@ -4,7 +4,12 @@ import { createContext, useContext, useState, ReactNode } from 'react';
 import { ApifyClient } from 'apify-client';
 
 interface Tweet {
+  url: string;
   text: string;
+  likesCount: number;
+  retweetsCount: number;
+  repliesCount: number;
+  timestamp: string;
 }
 
 interface TwitterAnalytics {
@@ -12,7 +17,7 @@ interface TwitterAnalytics {
 }
 
 interface TwitterScraperContextType {
-  scrapeTwitter: (profileUrl: string) => Promise<string[] | null>;
+  scrapeTwitter: (profileUrl: string) => Promise<TwitterAnalytics | null>;
   loading: boolean;
   error: string | null;
 }
@@ -23,7 +28,7 @@ export const TwitterScraperProvider = ({ children }: { children: ReactNode }) =>
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const scrapeTwitter = async (profileUrl: string): Promise<string[] | null> => {
+  const scrapeTwitter = async (profileUrl: string): Promise<TwitterAnalytics | null> => {
     setLoading(true);
     setError(null);
 
@@ -47,13 +52,20 @@ export const TwitterScraperProvider = ({ children }: { children: ReactNode }) =>
           console.dir(item);
       });
 
-      const tweets: string[] = (items || []).map((item: any) => item.text || '');
+      const posts: Tweet[] = (items || []).map((item: any) => ({
+        url: item.url || `https://twitter.com/status/${item.id || 'unknown'}`,
+        text: item.text || '',
+        likesCount: item.likeCount || item.likesCount || 0,
+        retweetsCount: item.retweetCount || item.retweetsCount || 0,
+        repliesCount: item.replyCount || item.repliesCount || 0,
+        timestamp: item.createdAt || item.timestamp || new Date().toISOString(),
+      }));
 
-      return tweets;
+      return { posts };
     } catch (err: any) {
       console.error('❌ Twitter scrape error:', err);
       setError(err.message || 'Something went wrong');
-      return [];
+      return { posts: [] };
     } finally {
       setLoading(false);
     }
