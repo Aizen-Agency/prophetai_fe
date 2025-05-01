@@ -359,12 +359,15 @@ export default function DashboardPage() {
       // Check if we have scraped Twitter data
       const twitterData = scrapedTwitterData?.tweets || [];
       
+      // Limit the number of tweets to 100 to avoid context length issues
+      const limitedTweets = twitterData.slice(0, 100);
+      
       const response = await DataService.generateScriptIdeas({
         product_name: products[0].name,
         description: products[0].description,
         link: products[0]?.link || "",
         script_idea: textFilter,
-        twitter_content: twitterData.length > 0 ? { tweets: twitterData } : undefined,
+        twitter_content: limitedTweets.length > 0 ? { tweets: limitedTweets } : undefined,
       })
 
       console.log("response", response)
