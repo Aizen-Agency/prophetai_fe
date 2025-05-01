@@ -149,74 +149,106 @@ export default function DashboardPage() {
   const scrapeTwitterProfile = async (profileUrl: string, productName: string) => {
     setIsScrapingTwitter(true);
     try {
-      // Use the Twitter scraper context instead of a backend endpoint
-      console.log('Starting Twitter scraping for profile:', profileUrl);
-      const result = await scrapeTwitter(profileUrl);
+      // Check if we have stored data and its timestamp
+      const storedData = localStorage.getItem('scrapedTwitterData');
+      const parsedData = storedData ? JSON.parse(storedData) : null;
       
-      if (result && result.posts && result.posts.length > 0) {
-        // Format the tweets to match what the backend expects
-        const formattedTweets = result.posts.map(post => ({
-          url: post.url,
-          text: post.content,
-          likesCount: post.likes,
-          retweetsCount: post.retweets,
-          repliesCount: post.replies,
-          timestamp: post.date
-        }));
+      // Check if we need to scrape new data
+      const shouldScrape = !parsedData || 
+                          parsedData.profile_url !== profileUrl || 
+                          parsedData.product_name !== productName ||
+                          !parsedData.timestamp ||
+                          new Date().getTime() - new Date(parsedData.timestamp).getTime() > 24 * 60 * 60 * 1000; // 24 hours
+
+      if (shouldScrape) {
+        console.log('Starting Twitter scraping for profile:', profileUrl);
+        const result = await scrapeTwitter(profileUrl);
         
-        const scrapedData: ScrapedTwitterData = {
-          profile_url: profileUrl,
-          product_name: productName,
-          articles_scraped: formattedTweets.length,
-          tweets: formattedTweets
-        };
-        
-        // Store in state and local storage
-        setScrapedTwitterData(scrapedData);
-        localStorage.setItem('scrapedTwitterData', JSON.stringify(scrapedData));
-        console.log("Stored Twitter data in local storage:", scrapedData);
-      } else {
-        console.warn("No tweets found, using mock data for development");
-        
-        // Create mock Twitter data for development
-        const mockTweets = [
-          {
-            url: `${profileUrl}/status/1`,
-            text: `Check out ${productName} - our revolutionary new product that helps content creators save time!`,
-            likesCount: 45,
-            retweetsCount: 12,
-            repliesCount: 5,
+        if (result && result.posts && result.posts.length > 0) {
+          // Format the tweets to match what the backend expects
+          const formattedTweets = result.posts.map(post => ({
+            url: post.url,
+            text: post.text,
+            likesCount: post.likesCount,
+            retweetsCount: post.retweetsCount,
+            repliesCount: post.repliesCount,
+            timestamp: post.timestamp
+          }));
+          
+          const scrapedData = {
+            profile_url: profileUrl,
+            product_name: productName,
+            articles_scraped: formattedTweets.length,
+            tweets: formattedTweets,
             timestamp: new Date().toISOString()
-          },
-          {
-            url: `${profileUrl}/status/2`,
-            text: `We're excited to announce new features in ${productName}! Now with AI-powered content generation.`,
-            likesCount: 78,
-            retweetsCount: 23,
-            repliesCount: 8,
-            timestamp: new Date(Date.now() - 86400000).toISOString() // Yesterday
-          },
-          {
-            url: `${profileUrl}/status/3`,
-            text: `Users are loving ${productName}! "This tool has saved me hours of work every week" says one happy customer.`,
-            likesCount: 105,
-            retweetsCount: 34,
-            repliesCount: 12,
-            timestamp: new Date(Date.now() - 172800000).toISOString() // 2 days ago
+          };
+          
+          // Store in state and local storage
+          setScrapedTwitterData(scrapedData);
+          localStorage.setItem('scrapedTwitterData', JSON.stringify(scrapedData));
+          
+          // Update insights in backend
+          try {
+            const userId = parseInt(getCookie('userId') || '0');
+            if (userId) {
+              await DataService.updateInsights({
+                user_id: userId,
+                articles_scraped: formattedTweets.length
+              });
+              console.log("Updated insights in backend");
+            }
+          } catch (error) {
+            console.error("Error updating insights:", error);
           }
-        ];
-        
-        const scrapedData: ScrapedTwitterData = {
-          profile_url: profileUrl,
-          product_name: productName,
-          articles_scraped: mockTweets.length,
-          tweets: mockTweets
-        };
-        
-        // Store mock data
-        setScrapedTwitterData(scrapedData);
-        localStorage.setItem('scrapedTwitterData', JSON.stringify(scrapedData));
-        console.log("Stored mock Twitter data in local storage:", scrapedData);
+          
+          console.log("Stored new Twitter data in local storage:", scrapedData);
+        } else {
+          console.warn("No tweets found, using mock data for development");
+          
+          // Create mock Twitter data for development
+          const mockTweets = [
+            {
+              url: `${profileUrl}/status/1`,
+              text: `Check out ${productName} - our revolutionary new product that helps content creators save time!`,
+              likesCount: 45,
+              retweetsCount: 12,
+              repliesCount: 5,
+              timestamp: new Date().toISOString()
+            },
+            {
+              url: `${profileUrl}/status/2`,
+              text: `We're excited to announce new features in ${productName}! Now with AI-powered content generation.`,
+              likesCount: 78,
+              retweetsCount: 23,
+              repliesCount: 8,
+              timestamp: new Date(Date.now() - 86400000).toISOString() // Yesterday
+            },
+            {
+              url: `${profileUrl}/status/3`,
+              text: `Users are loving ${productName}! "This tool has saved me hours of work every week" says one happy customer.`,
+              likesCount: 105,
+              retweetsCount: 34,
+              repliesCount: 12,
+              timestamp: new Date(Date.now() - 172800000).toISOString() // 2 days ago
+            }
+          ];
+          
+          const scrapedData: ScrapedTwitterData = {
+            profile_url: profileUrl,
+            product_name: productName,
+            articles_scraped: mockTweets.length,
+            tweets: mockTweets
+          };
+          
+          // Store mock data
+          setScrapedTwitterData(scrapedData);
+          localStorage.setItem('scrapedTwitterData', JSON.stringify(scrapedData));
+          console.log("Stored mock Twitter data in local storage:", scrapedData);
+        }
+      } else {
+        // Use the stored data
+        setScrapedTwitterData(parsedData);
+        console.log("Using stored Twitter data:", parsedData);
       }
     } catch (error) {
       console.error('Error scraping Twitter profile:', error);

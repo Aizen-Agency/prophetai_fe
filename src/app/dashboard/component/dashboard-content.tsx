@@ -13,8 +13,7 @@ interface DashboardContentProps {
   chartColors: {
     articles: string
     scripts: string
-    videosGen: string
-    videosPosted: string
+    totalVideos: string
   }
 }
 
@@ -37,12 +36,12 @@ export function DashboardContent({ userName, statsData, monthlyData, chartColors
             colors={{
               articles: chartColors.articles,
               scripts: chartColors.scripts,
-              videos: chartColors.videosGen
+              totalVideos: chartColors.totalVideos
             }} 
           />
         </div>
         <div>
-          <VideoGenerationChart data={monthlyData} color={chartColors.videosGen} />
+          <VideoGenerationChart data={monthlyData} color={chartColors.totalVideos} />
         </div>
       </div>
     </div>

@@ -1,8 +1,7 @@
 export const chartColors = {
     articles: "#8B5CF6", // Purple
     scripts: "#3B82F6", // Blue
-    videosGen: "#8B5CF6", // Purple for videos
-    videosPosted: "#0EA5E9", // Light Blue for long videos
+    totalVideos: "#10B981", // Green for videos
   }
   
   export const monthlyData = [

@@ -463,6 +463,27 @@ const DataService = {
       throw error;
     }
   },
+
+  updateInsights: async (data: { user_id: number; articles_scraped: number }) => {
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/update-insights`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update insights');
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Error updating insights:', error);
+      throw error;
+    }
+  },
 }
 
 export default DataService

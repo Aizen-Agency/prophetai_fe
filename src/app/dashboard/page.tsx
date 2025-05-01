@@ -64,6 +64,7 @@ export default function DashboardPage() {
     { title: "Scripts generated", value: totalScripts.toLocaleString(), change: "+0%" },
     { title: "Videos generated", value: totalVideos.toLocaleString(), change: "+0%" }
   ]
+  console.log("statsData", statsData)
 
   return (
     <div className="min-h-screen text-white flex relative overflow-hidden">

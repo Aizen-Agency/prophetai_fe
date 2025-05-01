@@ -6,11 +6,12 @@ interface PerformanceChartProps {
   colors: {
     articles: string
     scripts: string
-    videos: string
+    totalVideos: string
   }
 }
 
 export function PerformanceChart({ data, colors }: PerformanceChartProps) {
+  console.log("data and colors", data, colors)
   return (
     <Card className="bg-[#151F38] border-0 shadow-lg shadow-black/25">
       <CardHeader>
@@ -32,7 +33,7 @@ export function PerformanceChart({ data, colors }: PerformanceChartProps) {
             <Tooltip contentStyle={{ backgroundColor: "#151F38", border: "none" }} labelStyle={{ color: "#fff" }} />
             <Line type="monotone" dataKey="articles" stroke={colors.articles} strokeWidth={2} dot={false} />
             <Line type="monotone" dataKey="scripts" stroke={colors.scripts} strokeWidth={2} dot={false} />
-            <Line type="monotone" dataKey="videos" stroke={colors.videos} strokeWidth={2} dot={false} />
+            <Line type="monotone" dataKey="totalVideos" stroke={colors.totalVideos} strokeWidth={2} dot={false} />
           </LineChart>
         </ResponsiveContainer>
       </CardContent>
