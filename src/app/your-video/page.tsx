@@ -308,7 +308,10 @@ export default function YourVideosPage() {
           body: JSON.stringify({ 
             video_ids: [videoId], 
             user_id: userId, 
-            script_id: scriptId 
+            script_id: scriptId,
+            heygen: {
+              apiKey: localStorage.getItem('heyGenSettings') ? JSON.parse(localStorage.getItem('heyGenSettings')!).apiKey : null
+            }
           }),
         });
 
