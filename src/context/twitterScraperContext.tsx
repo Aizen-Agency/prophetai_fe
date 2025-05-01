@@ -4,12 +4,7 @@ import { createContext, useContext, useState, ReactNode } from 'react';
 import { ApifyClient } from 'apify-client';
 
 interface Tweet {
-  url: string;
-  content: string;
-  likes: number;
-  retweets: number;
-  replies: number;
-  date: string;
+  text: string;
 }
 
 interface TwitterAnalytics {
@@ -17,7 +12,7 @@ interface TwitterAnalytics {
 }
 
 interface TwitterScraperContextType {
-  scrapeTwitter: (profileUrl: string) => Promise<TwitterAnalytics | null>;
+  scrapeTwitter: (profileUrl: string) => Promise<string[] | null>;
   loading: boolean;
   error: string | null;
 }
@@ -28,65 +23,37 @@ export const TwitterScraperProvider = ({ children }: { children: ReactNode }) =>
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const scrapeTwitter = async (profileUrl: string): Promise<TwitterAnalytics | null> => {
+  const scrapeTwitter = async (profileUrl: string): Promise<string[] | null> => {
     setLoading(true);
     setError(null);
 
     try {
       const client = new ApifyClient({
-        token: "apify_api_ybMbddryhwVdnfhoWT7bYZWxd4s1A64quJvO",
+        token: "apify_api_df3Pk3RNqipvAGM4s8RtscKvp0pFgX2aYrQY",
       });
 
       const input = {
+        "maxItems": 10,
+        "sort": "Latest",
         "startUrls": [
-            profileUrl
-        ],
-        // "searchTerms": [
-        //     "elonmusk",
-        //     "taylorswift13"
-        // ],
-        "maxItems": 100,
-        // "twitterHandles": [
-        //     "elonmusk",
-        //     "taylorswift13"
-        // ],
-        // "twitterUserIds": [
-        //     "44196397",
-        //     "17919972"
-        // ],
-        "getFollowers": true,
-        "getFollowing": true,
-        "getRetweeters": true,
-        "includeUnavailableUsers": false,
-        "customMapFunction": "({ ...item }) => item"
-    };
-
-      const run = await client.actor("apidojo/twitter-user-scraper").call(input);
+          profileUrl
+        ]
+      }
+      const run = await client.actor("apidojo/twitter-scraper-lite").call(input);
       console.log('Results from dataset');
+      console.log("💾 Check your data here: https://console.apify.com/storage/datasets/" + run["defaultDatasetId"])
       const { items } = await client.dataset(run.defaultDatasetId).listItems();
       items.forEach((item) => {
           console.dir(item);
       });
 
+      const tweets: string[] = (items || []).map((item: any) => item.text || '');
 
-      // if (!run) throw new Error('All Twitter scraper actors failed');
-
-      // const { items } = await client.dataset(run.defaultDatasetId).listItems();
-
-      const posts: Tweet[] = (items || []).map((item: any) => ({
-        url: item.url || `https://twitter.com/status/${item.id || 'unknown'}`,
-        content: item.text || item.full_text || item.content || '',
-        likes: item.likesCount || item.likes_count || item.favorites_count || 0,
-        retweets: item.retweetsCount || item.retweets_count || 0,
-        replies: item.repliesCount || item.replies_count || 0,
-        date: item.timestamp || item.created_at || new Date().toISOString(),
-      }));
-
-      return { posts };
+      return tweets;
     } catch (err: any) {
       console.error('❌ Twitter scrape error:', err);
       setError(err.message || 'Something went wrong');
-      return { posts: [] };
+      return [];
     } finally {
       setLoading(false);
     }

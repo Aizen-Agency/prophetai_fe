@@ -438,9 +438,9 @@ export default function PerformanceAnalytics(): JSX.Element {
                   <SelectItem value="comments">
                     Comments {sortBy === "comments" && (sortOrder === "asc" ? "↑" : "↓")}
                   </SelectItem>
-                  <SelectItem value="shares">
+                  {/* <SelectItem value="shares">
                     Shares {sortBy === "shares" && (sortOrder === "asc" ? "↑" : "↓")}
-                  </SelectItem>
+                  </SelectItem> */}
                   <SelectItem value="averageViewsPerDay">
                     Avg. Views/Day {sortBy === "averageViewsPerDay" && (sortOrder === "asc" ? "↑" : "↓")}
                   </SelectItem>
@@ -467,7 +467,7 @@ export default function PerformanceAnalytics(): JSX.Element {
                     <TableHead className="text-white text-right">Views</TableHead>
                     <TableHead className="text-white text-right">Likes</TableHead>
                     <TableHead className="text-white text-right">Comments</TableHead>
-                    <TableHead className="text-white text-right">Shares</TableHead>
+                    {/* <TableHead className="text-white text-right">Shares</TableHead> */}
                     <TableHead className="text-white text-right">Avg. Views/Day</TableHead>
                     <TableHead className="text-white text-right">Performance</TableHead>
                     <TableHead className="text-white text-right">Actions</TableHead>
@@ -487,7 +487,7 @@ export default function PerformanceAnalytics(): JSX.Element {
                         <TableCell className="text-white text-right">{row.views.toLocaleString()}</TableCell>
                         <TableCell className="text-white text-right">{row.likes.toLocaleString()}</TableCell>
                         <TableCell className="text-white text-right">{row.comments.toLocaleString()}</TableCell>
-                        <TableCell className="text-white text-right">{row.shares.toLocaleString()}</TableCell>
+                        {/* <TableCell className="text-white text-right">{row.shares.toLocaleString()}</TableCell> */}
                         <TableCell className="text-white text-right">
                           {row.averageViewsPerDay.toLocaleString()}
                         </TableCell>
