@@ -22,17 +22,33 @@ function LoginForm() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    console.log('Login attempt with email:', email);
 
     try {
+      console.log('Attempting to call DataService.login...');
       const response = await DataService.login({email : email , password : password});
+      console.log('Login response received:', response);
+      
+      console.log('User details:', {
+        firstname: response.user.firstname,
+        isAdmin: response.user.isAdmin,
+        id: response.user.id
+      });
+      
       login(response.user.firstname, response.user.isAdmin, response.user.id);
+      
       if (response.user.isAdmin) {
+        console.log('Redirecting to admin dashboard...');
         router.push('/admin-dashboard/analytics');
       } else {
+        console.log('Redirecting to user dashboard...');
         router.push('/dashboard');
       }
     } catch (error: any) {
-      console.error('Login error:', error);
+      console.error('Login error details:', {
+        message: error.message,
+        error: error
+      });
       setError(error.message || 'An error occurred. Please try again.');
     }
   };
@@ -140,8 +156,9 @@ export default function Login() {
 
   useEffect(() => {
     if (videoRef.current) {
+      console.log('Attempting to play background video...');
       videoRef.current.play().catch(error => {
-        console.error("Error attempting to play video:", error);
+        console.error("Video playback error:", error);
       });
     }
   }, []);
