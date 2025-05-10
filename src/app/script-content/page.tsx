@@ -77,13 +77,17 @@ export default function ScriptsPage() {
         const currentScript = storedScripts.find((script: any) => script.id === parseInt(scriptId || '0'));
         const transcript = currentScript?.transcript;
 
+        if (!transcript) {
+          console.warn('No transcript found for the current script');
+        }
+
         const response = await DataService.generateMultipleIdeas({
           product_name: title,
           description: content,
           link: "",
           script_idea: content,
           user_id: userId,
-          transcript: transcript
+          transcript: transcript || "" // Ensure we always send a string
         })
 
         if (response && response.scripts) {

@@ -480,16 +480,21 @@ export default function DashboardPage() {
 
   const handleNext = () => {
     // Format the liked ideas to match the expected structure in generated-scripts
-    const formattedScripts = likedIdeas.map(idea => ({
-      id: idea.id,
-      idea_id: uuidv4(), // Generate a new UUID for each script
-      idea_title: idea.topic,
-      script_title: idea.topic,
-      content: idea.tweet,
-      is_locked: false,
-      isLiked: true,
-      hasVoice: idea.hasVoice || false
-    }))
+    const formattedScripts = likedIdeas.map(idea => {
+      // Find the original idea from scriptIdeas to get the transcript
+      const originalIdea = scriptIdeas.find(si => si.id === idea.id);
+      return {
+        id: idea.id,
+        idea_id: uuidv4(), // Generate a new UUID for each script
+        idea_title: idea.topic,
+        script_title: idea.topic,
+        content: idea.tweet,
+        is_locked: false,
+        isLiked: true,
+        hasVoice: idea.hasVoice || false,
+        transcript: originalIdea?.transcript || null
+      };
+    });
 
     // Store formatted scripts in localStorage
     localStorage.setItem('generatedScripts', JSON.stringify(formattedScripts))
