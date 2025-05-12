@@ -31,7 +31,7 @@ export function AdminSidebar() {
   }
 
   return (
-    <div className="w-[220px] h-screen bg-[#080f25]/60 py-8 px-4 flex flex-col border-r border-white/10 fixed left-0 top-0 z-10 overflow-y-auto no-scrollbar">
+    <div className="w-[220px] h-screen bg-[#080f25]/60 py-8 px-4 flex flex-col border-r border-white/10 fixed left-0 top-0 z-20 overflow-y-auto no-scrollbar">
       <div className="flex flex-col items-center gap-4 mb-16">
         <div className="w-20 h-20 flex items-center justify-center overflow-hidden rounded-full bg-white/10">
           <img

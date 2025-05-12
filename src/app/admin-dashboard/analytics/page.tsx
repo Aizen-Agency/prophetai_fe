@@ -286,12 +286,12 @@ export default function AdminDashboard() {
       <div className="sticky top-0 h-screen">
         <AdminSidebar />
       </div>
-      <LogoutButton />
 
       {/* Main Content */}
       <div className="flex-1 p-10 relative z-10 overflow-y-auto no-scrollbar ml-[220px]">
+      <LogoutButton />
         <div className="mb-8">
-          <h2 className="text-xl font-semibold text-white mb-4">Select User</h2>
+          <h2 className="text-xl font-semibold text-white mb-4 w-[60%]">Select User</h2>
           <div className="flex space-x-4 overflow-x-auto pb-4">
             <Button
               onClick={() => setSelectedUser(null)}

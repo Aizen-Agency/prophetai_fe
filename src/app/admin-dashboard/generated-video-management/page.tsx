@@ -130,10 +130,10 @@ export default function AdminDashboard(): JSX.Element {
 
       {/* Sidebar Component */}
       <AdminSidebar />
-      <LogoutButton />
 
       {/* Main Content */}
       <div className="flex-1 p-10 relative z-10 overflow-y-auto no-scrollbar ml-[220px]">
+        <LogoutButton />
         <h1 className="text-3xl font-semibold text-white mb-6">AI Video Management</h1>
 
         {/* User List */}
