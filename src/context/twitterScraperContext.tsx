@@ -34,7 +34,7 @@ export const TwitterScraperProvider = ({ children }: { children: ReactNode }) =>
 
     try {
       const client = new ApifyClient({
-        token: "apify_api_df3Pk3RNqipvAGM4s8RtscKvp0pFgX2aYrQY",
+        token: process.env.NEXT_PUBLIC_APIFY_API_KEY,
       });
 
       const input = {
