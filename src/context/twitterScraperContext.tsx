@@ -44,28 +44,63 @@ export const TwitterScraperProvider = ({ children }: { children: ReactNode }) =>
           profileUrl
         ]
       }
+
+      // Start the actor run
       const run = await client.actor("apidojo/twitter-scraper-lite").call(input);
-      console.log('Results from dataset');
-      console.log("💾 Check your data here: https://console.apify.com/storage/datasets/" + run["defaultDatasetId"])
-      const { items } = await client.dataset(run.defaultDatasetId).listItems();
-      items.forEach((item) => {
-          console.dir(item);
-      });
+      
+      // Create an abort controller for timeout
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 60000); // 1 minute timeout
 
-      const posts: Tweet[] = (items || []).map((item: any) => ({
-        url: item.url || `https://twitter.com/status/${item.id || 'unknown'}`,
-        text: item.text || '',
-        likesCount: item.likeCount || item.likesCount || 0,
-        retweetsCount: item.retweetCount || item.retweetsCount || 0,
-        repliesCount: item.replyCount || item.repliesCount || 0,
-        timestamp: item.createdAt || item.timestamp || new Date().toISOString(),
-      }));
+      try {
+        // Wait for the run to complete with timeout
+        await Promise.race([
+          new Promise((resolve, reject) => {
+            const checkStatus = async () => {
+              try {
+                const runInfo = await client.run(run.id).get();
+                if (runInfo && (runInfo.status === 'SUCCEEDED' || runInfo.status === 'FAILED')) {
+                  resolve(runInfo);
+                } else {
+                  setTimeout(checkStatus, 5000); // Check every 5 seconds
+                }
+              } catch (error) {
+                reject(error);
+              }
+            };
+            checkStatus();
+          }),
+          new Promise((_, reject) => {
+            controller.signal.addEventListener('abort', () => {
+              reject(new Error('Operation timed out after 1 minute'));
+            });
+          })
+        ]);
 
-      return { posts };
+        // Get the results
+        const { items } = await client.dataset(run.defaultDatasetId).listItems();
+        
+        if (!items || items.length === 0) {
+          throw new Error('No data was collected');
+        }
+
+        const posts: Tweet[] = items.map((item: any) => ({
+          url: item.url || `https://twitter.com/status/${item.id || 'unknown'}`,
+          text: item.text || '',
+          likesCount: item.likeCount || item.likesCount || 0,
+          retweetsCount: item.retweetCount || item.retweetsCount || 0,
+          repliesCount: item.replyCount || item.repliesCount || 0,
+          timestamp: item.createdAt || item.timestamp || new Date().toISOString(),
+        }));
+
+        return { posts };
+      } finally {
+        clearTimeout(timeoutId);
+      }
     } catch (err: any) {
       console.error('❌ Twitter scrape error:', err);
       setError(err.message || 'Something went wrong');
-      return { posts: [] };
+      return null;
     } finally {
       setLoading(false);
     }

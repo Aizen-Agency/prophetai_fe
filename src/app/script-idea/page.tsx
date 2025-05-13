@@ -74,6 +74,7 @@ export default function DashboardPage() {
   const [ideaRatings, setIdeaRatings] = useState<Record<number, "up" | "down" | null>>({})
   const [recordingIdea, setRecordingIdea] = useState<number | null>(null)
   const [recordingTime, setRecordingTime] = useState(0)
+  const [isAdding, setIsAdding] = useState(false);
 
   const [likedIdeas, setLikedIdeas] = useState<ScriptIdea[]>([])
   
@@ -283,6 +284,7 @@ export default function DashboardPage() {
 
   const addProduct = async () => {
     if (newProduct.name && newProduct.description) {
+        setIsAdding(true);
       try {
         const response = await DataService.addChannel({
           user_id: userId,
@@ -312,6 +314,8 @@ export default function DashboardPage() {
         }
       } catch (error) {
         console.error('Error adding product:', error);
+      } finally {
+        setIsAdding(false);
       }
     }
   };
@@ -356,7 +360,7 @@ export default function DashboardPage() {
 
     setIsGeneratingIdeas(true)
     try {
-      // Check if we have scraped Twitter data
+      // Get Twitter data if available, otherwise use empty array
       const twitterData = scrapedTwitterData?.tweets || [];
       
       // Limit the number of tweets to 100 to avoid context length issues
@@ -657,9 +661,18 @@ export default function DashboardPage() {
                         />
                       </TableCell>
                       <TableCell>
-                        <Button onClick={addProduct}>
-                          <Plus className="h-4 w-4 mr-2" />
-                          Add
+                        <Button onClick={addProduct} disabled={isAdding}>
+                        {isAdding ? (
+                            <>
+                              <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
+                              Adding...
+                            </>
+                          ) : (
+                            <>
+                              <Plus className="h-4 w-4 mr-2" />
+                              Add
+                            </>
+                        )}
                         </Button>
                       </TableCell>
                     </TableRow>
@@ -734,10 +747,9 @@ Exclude violence and adult content"
           <Button 
             onClick={generateScriptIdeas} 
             className="bg-purple-600 hover:bg-purple-700 text-white"
-            disabled={isGeneratingIdeas || isScrapingTwitter}
+            disabled={isGeneratingIdeas}
           >
-            {isScrapingTwitter ? "Scraping Twitter..." : 
-             isGeneratingIdeas ? "Generating..." : "Generate Script Ideas"}
+            {isGeneratingIdeas ? "Generating..." : "Generate Script Ideas"}
           </Button>
         </div>
 

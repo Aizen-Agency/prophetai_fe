@@ -34,6 +34,7 @@ export default function ScriptsPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
+  const [loadingMessage, setLoadingMessage] = useState("Generating your scripts...")
 
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -131,6 +132,15 @@ export default function ScriptsPage() {
 
     fetchScripts()
   }, [title, content, userId, scriptId])
+
+  useEffect(() => {
+    if (isLoading) {
+      const timer = setTimeout(() => {
+        setLoadingMessage("We're almost there, just a little more...")
+      }, 1000)
+      return () => clearTimeout(timer)
+    }
+  }, [isLoading])
 
   const copyToClipboard = async () => {
     try {
@@ -244,8 +254,17 @@ export default function ScriptsPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen text-white flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-purple-500"></div>
+      <div className="min-h-screen text-white flex relative overflow-hidden">
+        <div className="absolute inset-0 bg-[#080f25]">
+          <div className="absolute top-0 -left-1/4 w-3/4 h-3/4 bg-purple-900/20 rounded-full blur-3xl"></div>
+          <div className="absolute top-1/4 -right-1/4 w-3/4 h-3/4 bg-blue-900/20 rounded-full blur-3xl"></div>
+          <div className="absolute -bottom-1/4 left-1/4 w-3/4 h-3/4 bg-indigo-900/20 rounded-full blur-3xl"></div>
+        </div>
+        <div className="absolute inset-0 bg-gradient-to-br from-[#080f25]/80 via-[#1a1c2e]/60 to-[#2d1b3d]/40"></div>
+        <div className="flex-grow flex flex-col items-center justify-center relative z-10 space-y-4">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-purple-500"></div>
+          <p className="text-white/80 text-lg animate-pulse">{loadingMessage}</p>
+        </div>
       </div>
     )
   }
