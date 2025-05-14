@@ -87,18 +87,32 @@ export default function DashboardPage() {
     // Load scripts from localStorage
     const storedScripts = localStorage.getItem('generatedScripts')
     if (storedScripts) {
+      console.log('Loading generatedScripts from localStorage:', JSON.parse(storedScripts))
+      
       const parsedScripts = JSON.parse(storedScripts)
-      setScripts(parsedScripts.map((script: any) => ({
-        id: script.id,
-        idea_id: script.idea_id,
-        idea_title: script.topic,
-        script_title: script.script_title,
-        content: script.content,
-        is_locked: script.is_locked,
-        isLiked: script.isLiked,
-        hasVoice: script.hasVoice,
-        script_id: script.script_id || (script.is_locked ? "saved" : undefined) // If script has script_id or is locked, mark as saved
-      })))
+      const processedScripts = parsedScripts.map((script: any) => {
+        console.log(`Processing script ${script.id}:`, script)
+        console.log(`Script ${script.id} is_locked status:`, script.is_locked)
+        console.log(`Script ${script.id} script_id:`, script.script_id)
+        
+        const shouldShowSaved = script.script_id || script.is_locked
+        console.log(`Script ${script.id} should show saved badge:`, shouldShowSaved)
+        
+        return {
+          id: script.id,
+          idea_id: script.idea_id,
+          idea_title: script.topic,
+          script_title: script.script_title,
+          content: script.content,
+          is_locked: script.is_locked,
+          isLiked: script.isLiked,
+          hasVoice: script.hasVoice,
+          script_id: script.script_id || (script.is_locked ? "saved" : undefined) // If script has script_id or is locked, mark as saved
+        }
+      })
+      
+      console.log('Processed scripts with saved badges:', processedScripts)
+      setScripts(processedScripts)
     }
 
     // Load previous HeyGen settings from localStorage if available
@@ -424,7 +438,7 @@ export default function DashboardPage() {
                   <Badge variant="secondary" className="text-xs bg-white/20 text-white">
                     Liked
                   </Badge>
-                  {script.script_id && (
+                  {(script.script_id || script.is_locked) && (
                     <Badge variant="secondary" className="text-xs bg-green-500/20 text-white">
                       💾 Script Saved
                     </Badge>

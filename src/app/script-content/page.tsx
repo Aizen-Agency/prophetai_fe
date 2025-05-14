@@ -183,6 +183,8 @@ export default function ScriptsPage() {
 
       // Get the current script's idea_id from localStorage
       const storedScripts = JSON.parse(localStorage.getItem('generatedScripts') || '[]')
+      console.log('Before saving - localStorage scripts:', storedScripts)
+      
       const currentScript = storedScripts.find((script: any) => script.id === parseInt(scriptId || '0'))
       const idea_id = currentScript?.idea_id
       const idea_title = currentScript?.idea_title
@@ -194,6 +196,8 @@ export default function ScriptsPage() {
       }
 
       const scriptToSave = scripts[selectedScript]
+      console.log('Saving script with locked status:', isLocked)
+      
       const response = await DataService.saveScript({
         user_id: userId,
         idea_id: idea_id,
@@ -202,19 +206,32 @@ export default function ScriptsPage() {
         script_content: scripts[selectedScript].content,
         is_locked: isLocked
       })
+      
+      console.log('Save script response:', response)
 
       // Update localStorage with the script_id from the response and is_locked status
       const updatedScripts = storedScripts.map((script: any) => {
         if (script.id === parseInt(scriptId || '0')) {
-          return {
+          const updatedScript = {
             ...script,
             is_locked: true, // Always set to true when saving
             script_id: response.id // Add the script_id from the response
-          }
+          };
+          console.log('Updated script in localStorage:', updatedScript)
+          return updatedScript
         }
         return script
       })
+      
+      console.log('After saving - updated scripts to save to localStorage:', updatedScripts)
       localStorage.setItem('generatedScripts', JSON.stringify(updatedScripts))
+      
+      // Verify the localStorage was updated correctly
+      const verifyScripts = JSON.parse(localStorage.getItem('generatedScripts') || '[]')
+      console.log('Verification - localStorage after saving:', verifyScripts)
+      const verifyScript = verifyScripts.find((script: any) => script.id === parseInt(scriptId || '0'))
+      console.log('Verification - current script after saving:', verifyScript)
+      
     } catch (error) {
       console.error('Error saving script:', error)
     } finally {
@@ -247,18 +264,33 @@ export default function ScriptsPage() {
     const newLockState = !isLocked
     setIsLocked(newLockState)
     
+    console.log('Toggling lock state to:', newLockState)
+    console.log('Current scriptId:', scriptId)
+    
     // Update localStorage immediately when lock status changes
     const storedScripts = JSON.parse(localStorage.getItem('generatedScripts') || '[]')
+    console.log('Before toggle - localStorage scripts:', storedScripts)
+    
     const updatedScripts = storedScripts.map((script: any) => {
       if (script.id === parseInt(scriptId || '0')) {
-        return {
+        const updatedScript = {
           ...script,
           is_locked: newLockState
-        }
+        };
+        console.log('Updated script lock status in localStorage:', updatedScript)
+        return updatedScript
       }
       return script
     })
+    
+    console.log('After toggle - updated scripts to save to localStorage:', updatedScripts)
     localStorage.setItem('generatedScripts', JSON.stringify(updatedScripts))
+    
+    // Verify the localStorage was updated correctly
+    const verifyScripts = JSON.parse(localStorage.getItem('generatedScripts') || '[]')
+    console.log('Verification - localStorage after toggle:', verifyScripts)
+    const verifyScript = verifyScripts.find((script: any) => script.id === parseInt(scriptId || '0'))
+    console.log('Verification - current script after toggle:', verifyScript)
     
     if (newLockState) {
       await saveScript()
