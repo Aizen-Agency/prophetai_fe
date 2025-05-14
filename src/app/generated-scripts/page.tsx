@@ -43,6 +43,7 @@ type Script = {
   is_locked: boolean
   isLiked: boolean
   hasVoice: boolean
+  script_id?: string
 }
 
 type HeyGenSettings = {
@@ -95,7 +96,8 @@ export default function DashboardPage() {
         content: script.content,
         is_locked: script.is_locked,
         isLiked: script.isLiked,
-        hasVoice: script.hasVoice
+        hasVoice: script.hasVoice,
+        script_id: script.script_id || (script.is_locked ? "saved" : undefined) // If script has script_id or is locked, mark as saved
       })))
     }
 
@@ -422,6 +424,11 @@ export default function DashboardPage() {
                   <Badge variant="secondary" className="text-xs bg-white/20 text-white">
                     Liked
                   </Badge>
+                  {script.script_id && (
+                    <Badge variant="secondary" className="text-xs bg-green-500/20 text-white">
+                      💾 Script Saved
+                    </Badge>
+                  )}
                   {script.hasVoice && (
                     <Badge variant="secondary" className="text-xs bg-purple-500/20 text-white">
                       <Mic className="h-3 w-3 mr-1" />

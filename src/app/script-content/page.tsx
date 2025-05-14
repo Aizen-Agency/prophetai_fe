@@ -203,12 +203,12 @@ export default function ScriptsPage() {
         is_locked: isLocked
       })
 
-      // Update localStorage with the script_id from the response
+      // Update localStorage with the script_id from the response and is_locked status
       const updatedScripts = storedScripts.map((script: any) => {
         if (script.id === parseInt(scriptId || '0')) {
           return {
             ...script,
-            is_locked: isLocked,
+            is_locked: true, // Always set to true when saving
             script_id: response.id // Add the script_id from the response
           }
         }
@@ -246,6 +246,19 @@ export default function ScriptsPage() {
   const toggleLock = async () => {
     const newLockState = !isLocked
     setIsLocked(newLockState)
+    
+    // Update localStorage immediately when lock status changes
+    const storedScripts = JSON.parse(localStorage.getItem('generatedScripts') || '[]')
+    const updatedScripts = storedScripts.map((script: any) => {
+      if (script.id === parseInt(scriptId || '0')) {
+        return {
+          ...script,
+          is_locked: newLockState
+        }
+      }
+      return script
+    })
+    localStorage.setItem('generatedScripts', JSON.stringify(updatedScripts))
     
     if (newLockState) {
       await saveScript()
