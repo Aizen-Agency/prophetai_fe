@@ -352,7 +352,7 @@ export default function DashboardPage() {
     setXChannels(xChannels.filter((channel) => channel.id !== id))
   }
 
-  const generateScriptIdeas = async () => {
+  const generateScriptIdeas = async (loadMore = false) => {
     if (products.length === 0) {
       console.error("No products available")
       return
@@ -378,11 +378,16 @@ export default function DashboardPage() {
 
       if (response) {
         const newIdeas: ScriptIdea[] = response.ideas.map((idea: any, index: number) => ({
-          id: index + 1,
+          id: loadMore ? scriptIdeas.length + index + 1 : index + 1,
           topic: idea.title,
           tweet: idea.content,
         }))
-        setScriptIdeas(newIdeas)
+        
+        if (loadMore) {
+          setScriptIdeas(prevIdeas => [...prevIdeas, ...newIdeas])
+        } else {
+          setScriptIdeas(newIdeas)
+        }
       } else {
         console.error("Failed to generate script ideas")
       }
@@ -745,7 +750,7 @@ Exclude violence and adult content"
           </div>
 
           <Button 
-            onClick={generateScriptIdeas} 
+            onClick={() => generateScriptIdeas(true)} 
             className="bg-purple-600 hover:bg-purple-700 text-white"
             disabled={isGeneratingIdeas}
           >
@@ -838,6 +843,18 @@ Exclude violence and adult content"
                 </div>
               ))}
             </div>
+            
+            {/* Load More Button */}
+            <div className="flex justify-end mt-6">
+              <Button 
+                onClick={() => generateScriptIdeas(true)} 
+                className="bg-purple-600 hover:bg-purple-700 text-white mr-4"
+                disabled={isGeneratingIdeas}
+              >
+                {isGeneratingIdeas ? "Loading More..." : "Load More Ideas"}
+              </Button>
+            </div>
+            
             <Button 
               onClick={handleNext} 
               className="bg-purple-600 hover:bg-purple-700 text-white my-6"
