@@ -750,11 +750,18 @@ Exclude violence and adult content"
           </div>
 
           <Button 
-            onClick={() => generateScriptIdeas(true)} 
+            onClick={() => generateScriptIdeas(false)} 
             className="bg-purple-600 hover:bg-purple-700 text-white"
             disabled={isGeneratingIdeas}
           >
-            {isGeneratingIdeas ? "Generating..." : "Generate Script Ideas"}
+            {isGeneratingIdeas ? (
+              <>
+                <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
+                Generating...
+              </>
+            ) : (
+              "Generate Script Ideas"
+            )}
           </Button>
         </div>
 
@@ -851,7 +858,14 @@ Exclude violence and adult content"
                 className="bg-purple-600 hover:bg-purple-700 text-white mr-4"
                 disabled={isGeneratingIdeas}
               >
-                {isGeneratingIdeas ? "Loading More..." : "Load More Ideas"}
+                {isGeneratingIdeas ? (
+                  <>
+                    <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
+                    Loading More...
+                  </>
+                ) : (
+                  "Load More Ideas"
+                )}
               </Button>
             </div>
             
