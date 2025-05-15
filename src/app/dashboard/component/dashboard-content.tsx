@@ -15,9 +15,10 @@ interface DashboardContentProps {
     scripts: string
     totalVideos: string
   }
+  isLoading?: boolean
 }
 
-export function DashboardContent({ userName, statsData, monthlyData, chartColors }: DashboardContentProps) {
+export function DashboardContent({ userName, statsData, monthlyData, chartColors, isLoading = false }: DashboardContentProps) {
   return (
     <div className="flex-grow p-10 relative z-10">
       <div className="mb-10">
@@ -26,7 +27,7 @@ export function DashboardContent({ userName, statsData, monthlyData, chartColors
       </div>
 
       {/* Stats Grid */}
-      <StatsGrid stats={statsData} />
+      <StatsGrid stats={statsData} isLoading={isLoading} />
 
       {/* Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -38,10 +39,11 @@ export function DashboardContent({ userName, statsData, monthlyData, chartColors
               scripts: chartColors.scripts,
               totalVideos: chartColors.totalVideos
             }} 
+            isLoading={isLoading}
           />
         </div>
         <div>
-          <VideoGenerationChart data={monthlyData} color={chartColors.totalVideos} />
+          <VideoGenerationChart data={monthlyData} color={chartColors.totalVideos} isLoading={isLoading} />
         </div>
       </div>
     </div>

@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { LayoutDashboard, Plus, X, Twitter, ChevronDown, ChevronUp, ThumbsUp, ThumbsDown, Mic } from "lucide-react"
+import { LayoutDashboard, Plus, X, Twitter, ChevronDown, ChevronUp, ThumbsUp, ThumbsDown, Mic, AlertTriangle } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
@@ -15,6 +15,14 @@ import { TranscriptionService } from '@/app/service/TranscriptionService';
 import LogoutButton from "@/components/LogoutButton"
 import { v4 as uuidv4 } from 'uuid'
 import { useTwitterScraper } from "@/context/twitterScraperContext"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
 
 type Product = {
   id: number
@@ -87,6 +95,10 @@ export default function DashboardPage() {
   const { isRecording, recordingTime: audioRecordingTime, startRecording, stopRecording, updateRecordingTranscript } = useAudioRecorder();
   const transcriptionService = TranscriptionService.getInstance();
   const { scrapeTwitter, loading: twitterScraping } = useTwitterScraper();
+
+  const [productToDelete, setProductToDelete] = useState<number | null>(null)
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [isDeleting, setIsDeleting] = useState(false)
 
   useEffect(() => {
     setIsScrapingTwitter(twitterScraping);
@@ -320,15 +332,23 @@ export default function DashboardPage() {
     }
   };
 
-  const removeProduct = async (id: number) => {
+  const confirmDeleteProduct = (id: number) => {
+    setProductToDelete(id)
+    setDeleteDialogOpen(true)
+  }
+
+  const handleDeleteConfirm = async () => {
+    if (productToDelete === null) return
+    
+    setIsDeleting(true)
     try {
-      await DataService.deleteChannel(id);
+      await DataService.deleteChannel(productToDelete);
       
       // Get the product being removed
-      const productToRemove = products.find(p => p.id === id);
+      const productToRemove = products.find(p => p.id === productToDelete);
       
       // Remove from products list
-      setProducts(products.filter((product) => product.id !== id));
+      setProducts(products.filter((product) => product.id !== productToDelete));
       
       // If we removed the product that was scraped, clear the scraped data
       if (productToRemove && scrapedTwitterData && 
@@ -338,8 +358,12 @@ export default function DashboardPage() {
       }
     } catch (error) {
       console.error('Error removing product:', error);
+    } finally {
+      setIsDeleting(false)
+      setDeleteDialogOpen(false)
+      setProductToDelete(null)
     }
-  };
+  }
 
   const addXChannel = () => {
     if (newXChannel.name && newXChannel.url) {
@@ -637,7 +661,7 @@ export default function DashboardPage() {
                         <TableCell>{product.description}</TableCell>
                         <TableCell>{product.link || "N/A"}</TableCell>
                         <TableCell>
-                          <Button variant="ghost" size="icon" onClick={() => removeProduct(product.id)}>
+                          <Button variant="ghost" size="icon" onClick={() => confirmDeleteProduct(product.id)}>
                             <X className="h-4 w-4" />
                           </Button>
                         </TableCell>
@@ -878,6 +902,64 @@ Exclude violence and adult content"
           </div>
         )}
       </div>
+
+      {/* Confirmation Dialog */}
+      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <DialogContent className="bg-gradient-to-br from-[#1a1c2e] to-[#2d1b3d] text-white border border-purple-500/30 shadow-xl rounded-xl max-w-md mx-auto animate-in fade-in-50 slide-in-from-bottom-5 duration-300">
+          <div className="absolute -top-12 left-1/2 transform -translate-x-1/2 bg-red-500 p-3 rounded-full shadow-lg animate-bounce">
+            <AlertTriangle className="h-6 w-6 text-white" />
+          </div>
+          
+          <DialogHeader className="pt-6">
+            <DialogTitle className="text-2xl font-bold text-center text-white">Delete Channel</DialogTitle>
+            <DialogDescription className="text-gray-300 text-center mt-2">
+              Are you sure you want to delete this channel?
+              <span className="block mt-1 text-red-400 font-medium">This action cannot be undone.</span>
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="my-4 border-t border-b border-gray-700/50 py-4">
+            {productToDelete && (
+              <div className="bg-gray-800/50 p-4 rounded-lg backdrop-blur-sm animate-in slide-in-from-left duration-300">
+                <p className="text-sm text-gray-300">
+                  You are about to delete:
+                </p>
+                <p className="text-white font-medium mt-1 text-lg">
+                  {products.find(p => p.id === productToDelete)?.name}
+                </p>
+                <p className="text-xs text-gray-400 mt-1">
+                  {products.find(p => p.id === productToDelete)?.description}
+                </p>
+              </div>
+            )}
+          </div>
+          
+          <DialogFooter className="flex space-x-4 justify-center sm:justify-end">
+            <Button
+              variant="outline"
+              onClick={() => setDeleteDialogOpen(false)}
+              className="border-gray-600 bg-transparent hover:bg-gray-800 text-black transition-all duration-200 hover:scale-105"
+              disabled={isDeleting}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleDeleteConfirm}
+              className="bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white shadow-md hover:shadow-lg transition-all duration-200 hover:scale-105"
+              disabled={isDeleting}
+            >
+              {isDeleting ? (
+                <>
+                  <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
+                  Deleting...
+                </>
+              ) : (
+                "Delete Channel"
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

@@ -46,25 +46,31 @@ export default function DashboardPage() {
     fetchInsights()
   }, [userId])
 
-  if (loading) {
-    return <div className="min-h-screen text-white flex items-center justify-center">Loading...</div>
-  }
-
-  if (error) {
-    return <div className="min-h-screen text-white flex items-center justify-center">{error}</div>
-  }
-
-  // Calculate total values for articles, scripts, and videos
-  const totalArticles = insights.reduce((sum: number, monthData: any) => sum + monthData.articles, 0)
-  const totalScripts = insights.reduce((sum: number, monthData: any) => sum + monthData.scripts, 0)
-  const totalVideos = insights.reduce((sum: number, monthData: any) => sum + monthData.totalVideos, 0)
-
-  const statsData = [
-    { title: "Articles scraped", value: totalArticles.toLocaleString(), change: "+0%" },
-    { title: "Scripts generated", value: totalScripts.toLocaleString(), change: "+0%" },
-    { title: "Videos generated", value: totalVideos.toLocaleString(), change: "+0%" }
+  // Placeholder stats for loading state
+  const loadingStatsData = [
+    { title: "Articles scraped", value: "—", change: "+0%" },
+    { title: "Scripts generated", value: "—", change: "+0%" },
+    { title: "Videos generated", value: "—", change: "+0%" }
   ]
-  console.log("statsData", statsData)
+
+  // Generate empty monthly data for loading state
+  const generateEmptyMonthlyData = () => {
+    return Array(6).fill(0).map((_, i) => ({
+      month: i+1,
+      articles: 0,
+      scripts: 0,
+      totalVideos: 0
+    }))
+  }
+
+  // Prepare stats data based on loading state
+  const statsData = !loading && insights ? [
+    { title: "Articles scraped", value: insights.reduce((sum: number, monthData: any) => sum + monthData.articles, 0).toLocaleString(), change: "+0%" },
+    { title: "Scripts generated", value: insights.reduce((sum: number, monthData: any) => sum + monthData.scripts, 0).toLocaleString(), change: "+0%" },
+    { title: "Videos generated", value: insights.reduce((sum: number, monthData: any) => sum + monthData.totalVideos, 0).toLocaleString(), change: "+0%" }
+  ] : loadingStatsData
+
+  const monthlyData = !loading && insights ? insights : generateEmptyMonthlyData()
 
   return (
     <div className="min-h-screen text-white flex relative overflow-hidden">
@@ -73,11 +79,17 @@ export default function DashboardPage() {
       <div className="flex-grow p-10 relative z-10 overflow-y-auto ml-[150px]">
         <LogoutButton />
         <DashboardContent 
-          userName={username}
+          userName={username || "User"}
           statsData={statsData}
-          monthlyData={insights}
+          monthlyData={monthlyData}
           chartColors={chartColors} 
+          isLoading={loading}
         />
+        {error && (
+          <div className="mt-4 p-4 bg-red-500/20 rounded-md border border-red-500/30">
+            <p className="text-red-300">{error}</p>
+          </div>
+        )}
       </div>
     </div>
   )

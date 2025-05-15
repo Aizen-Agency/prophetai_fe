@@ -8,10 +8,10 @@ interface PerformanceChartProps {
     scripts: string
     totalVideos: string
   }
+  isLoading?: boolean
 }
 
-export function PerformanceChart({ data, colors }: PerformanceChartProps) {
-  console.log("data and colors", data, colors)
+export function PerformanceChart({ data, colors, isLoading = false }: PerformanceChartProps) {
   return (
     <Card className="bg-[#151F38] border-0 shadow-lg shadow-black/25">
       <CardHeader>
@@ -25,17 +25,23 @@ export function PerformanceChart({ data, colors }: PerformanceChartProps) {
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <ResponsiveContainer width="100%" height={400}>
-          <LineChart data={data}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#243049" />
-            <XAxis dataKey="name" stroke="#fff" />
-            <YAxis stroke="#fff" />
-            <Tooltip contentStyle={{ backgroundColor: "#151F38", border: "none" }} labelStyle={{ color: "#fff" }} />
-            <Line type="monotone" dataKey="articles" stroke={colors.articles} strokeWidth={2} dot={false} />
-            <Line type="monotone" dataKey="scripts" stroke={colors.scripts} strokeWidth={2} dot={false} />
-            <Line type="monotone" dataKey="totalVideos" stroke={colors.totalVideos} strokeWidth={2} dot={false} />
-          </LineChart>
-        </ResponsiveContainer>
+        {isLoading ? (
+          <div className="h-[400px] w-full bg-[#1E293B]/30 rounded-md animate-pulse flex items-center justify-center">
+            <div className="text-white/30 text-lg">Loading data...</div>
+          </div>
+        ) : (
+          <ResponsiveContainer width="100%" height={400}>
+            <LineChart data={data}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#243049" />
+              <XAxis dataKey="name" stroke="#fff" />
+              <YAxis stroke="#fff" />
+              <Tooltip contentStyle={{ backgroundColor: "#151F38", border: "none" }} labelStyle={{ color: "#fff" }} />
+              <Line type="monotone" dataKey="articles" stroke={colors.articles} strokeWidth={2} dot={false} />
+              <Line type="monotone" dataKey="scripts" stroke={colors.scripts} strokeWidth={2} dot={false} />
+              <Line type="monotone" dataKey="totalVideos" stroke={colors.totalVideos} strokeWidth={2} dot={false} />
+            </LineChart>
+          </ResponsiveContainer>
+        )}
       </CardContent>
     </Card>
   )

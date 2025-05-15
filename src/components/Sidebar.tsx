@@ -4,6 +4,7 @@ import { LayoutDashboard, FileText, Video, Send } from 'lucide-react'
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { useRouter } from 'next/navigation'
 import { useLogin } from '@/context/LoginContext'
+import { useEffect } from 'react'
 
 
 interface SidebarProps {
@@ -23,6 +24,12 @@ const sidebarItems = [
 export function Sidebar({ activeItem = "scripts" }: SidebarProps) {
   const router = useRouter();
   const { username } = useLogin();
+
+  // Prefetch critical routes for smoother navigation
+  useEffect(() => {
+    // Prefetch dashboard route
+    router.prefetch('/dashboard');
+  }, [router]);
 
   const navigate = (link: string) => {
     console.log("Navigating to:", link);
