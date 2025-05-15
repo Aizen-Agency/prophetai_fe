@@ -15,6 +15,7 @@ import {
   ChevronUp,
   Filter,
   SortAsc,
+  ImageOff
 } from "lucide-react"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Button } from "@/components/ui/button"
@@ -80,6 +81,7 @@ const generateInstagramData = (count: number, userId: number): InstagramVideo[] 
       weekOverWeekGrowth,
       performance,
       date,
+      display_url: `https://example.com/image${i}.jpg`
     })
   }
   return data
@@ -130,6 +132,39 @@ const ExpandedRow: React.FC<ExpandedRowProps> = ({ data }) => {
     </div>
   )
 }
+
+// Add this new component for handling Instagram images
+interface ProxiedImageProps {
+  src: string;
+  alt: string;
+  className?: string;
+}
+
+const ProxiedImage: React.FC<ProxiedImageProps> = ({ src, alt, className }) => {
+  const [error, setError] = useState(false);
+  
+  // Use a proxy service or convert to base64 if needed
+  // For now we'll just handle errors and show a fallback
+  
+  if (error) {
+    return (
+      <div className={`flex items-center justify-center bg-gray-800 ${className}`}>
+        <ImageOff className="w-6 h-6 text-gray-400" />
+      </div>
+    );
+  }
+  
+  return (
+    <img
+      src={src}
+      alt={alt}
+      className={className}
+      onError={() => setError(true)}
+      referrerPolicy="no-referrer"
+      crossOrigin="anonymous"
+    />
+  );
+};
 
 export default function PerformanceAnalytics(): JSX.Element {
   const [selectedUser, setSelectedUser] = useState<User>(users)
@@ -186,11 +221,12 @@ export default function PerformanceAnalytics(): JSX.Element {
         const formattedData: InstagramVideo[] = analyticsPosts.posts.map((post: any, index: number) => ({
           id: index + 1,
           userId: selectedUser.id,
-          title: post.video || `Instagram Post ${index + 1}`,
+          title: post.caption || `Instagram Post ${index + 1}`,
           views: post.views || 0,
           likes: post.likes || 0,
           comments: post.comments || 0,
           shares: post.shares || 0,
+          display_url: post.display_url || "",
           dailyViews: generateDailyViews(14), // Generate sample daily views for now
           averageViewsPerDay: post.avg_views_per_day || 0,
           weekOverWeekGrowth: calculateWeekOverWeekGrowth(generateDailyViews(14)),
@@ -482,7 +518,18 @@ export default function PerformanceAnalytics(): JSX.Element {
                         } ${index === currentItems.length - 1 && expandedRow !== row.id ? "rounded-b-lg" : ""}`}
                         onClick={() => setExpandedRow(expandedRow === row.id ? null : row.id)}
                       >
-                        <TableCell className="font-medium text-white">{row.title}</TableCell>
+                        <TableCell className="font-medium text-white">
+                          <div className="flex items-center">
+                            {row.display_url && (
+                              <ProxiedImage
+                                src={row.display_url}
+                                alt="Post thumbnail"
+                                className="w-12 h-12 object-cover rounded-md mr-3"
+                              />
+                            )}
+                            <span className="line-clamp-1">{row.title || `Instagram Post ${row.id}`}</span>
+                          </div>
+                        </TableCell>
                         <TableCell className="text-white text-right">{row.date.toLocaleDateString()}</TableCell>
                         <TableCell className="text-white text-right">{row.views.toLocaleString()}</TableCell>
                         <TableCell className="text-white text-right">{row.likes.toLocaleString()}</TableCell>

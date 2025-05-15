@@ -21,6 +21,7 @@ export interface User {
     likes: number
     comments: number
     shares: number
+    display_url: string
     dailyViews: DailyView[]
     averageViewsPerDay: number
     weekOverWeekGrowth: string
