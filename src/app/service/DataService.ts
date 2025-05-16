@@ -111,6 +111,7 @@ const DataService = {
     script_idea: string;
     user_id: string;
     transcript: string;
+    twitter_content?: any;
   }) => {
     try {
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/generate-scripts`, {

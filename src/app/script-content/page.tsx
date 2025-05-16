@@ -82,13 +82,26 @@ export default function ScriptsPage() {
           console.warn('No transcript found for the current script');
         }
 
+        // Get Twitter data from localStorage
+        let twitterContent = null;
+        try {
+          const scrapedTwitterData = JSON.parse(localStorage.getItem('scrapedTwitterData') || '{}');
+          if (scrapedTwitterData && Object.keys(scrapedTwitterData).length > 0) {
+            console.log('Found scraped Twitter data:', scrapedTwitterData);
+            twitterContent = scrapedTwitterData;
+          }
+        } catch (error) {
+          console.error('Error parsing scraped Twitter data:', error);
+        }
+
         const response = await DataService.generateMultipleIdeas({
           product_name: title,
           description: content,
           link: "",
           script_idea: content,
           user_id: userId,
-          transcript: transcript || "" // Ensure we always send a string
+          transcript: transcript || "", // Ensure we always send a string
+          twitter_content: twitterContent
         })
 
         if (response && response.scripts) {
